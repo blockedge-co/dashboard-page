@@ -143,10 +143,13 @@ export function CarbonDashboard() {
   const [projectStats, setProjectStats] = useState<any>(null)
   const [animatedMetrics, setAnimatedMetrics] = useState(realData.heroMetrics.map(() => 0))
 
-  // Fetch real data on component mount
+  // Initialize R2 data source and fetch real data on component mount
   useEffect(() => {
     const fetchRealData = async () => {
       try {
+        // Initialize with your BlockEdge R2 URL
+        initializeProjectData('https://asset.blockedge.co/blockedge-co2e-project.json')
+        
         const [transactions, blocks, stats, projectsData, projectStatsData] = await Promise.all([
           co2eApi.getMainPageTransactions(),
           co2eApi.getMainPageBlocks(),
