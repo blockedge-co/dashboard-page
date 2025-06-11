@@ -68,7 +68,7 @@ import { co2eApi } from "@/lib/co2e-api";
 import { initializeProjectData } from "@/lib/project-data-manager";
 import { useDebouncedFilter } from "@/hooks/use-debounced-filter";
 import { usePerformance } from "@/hooks/use-performance";
-import { viewProjectOnBlockchain } from "@/lib/blockchain-utils";
+import { viewTokenOnBlockchain, viewCertOnBlockchain } from "@/lib/blockchain-utils";
 import ProjectCard from "./project-card";
 import {
   LoadingText,
@@ -292,7 +292,7 @@ export function CarbonDashboard() {
                 title: "CO2 Reduction",
                 value:
                   projectStatsData.totalCO2Reduction &&
-                  projectStatsData.totalCO2Reduction !== "0"
+                    projectStatsData.totalCO2Reduction !== "0"
                     ? `${projectStatsData.totalCO2Reduction}`
                     : "—",
                 change: "",
@@ -503,11 +503,10 @@ export function CarbonDashboard() {
                           <ArrowDownRight className="w-4 h-4 text-red-400" />
                         )}
                         <span
-                          className={`text-sm font-medium ${
-                            metric.trend === "up"
+                          className={`text-sm font-medium ${metric.trend === "up"
                               ? "text-emerald-400"
                               : "text-red-400"
-                          }`}
+                            }`}
                         >
                           {metric.change}
                         </span>
@@ -1372,8 +1371,8 @@ export function CarbonDashboard() {
                             {tx.type} •{" "}
                             {tx.from
                               ? `${tx.from.substring(0, 6)}...${tx.from.slice(
-                                  -4
-                                )}`
+                                -4
+                              )}`
                               : "Unknown"}
                           </div>
                         </div>
@@ -1614,13 +1613,12 @@ export function CarbonDashboard() {
                                     duration: 1,
                                     delay: 0.5 + index * 0.1,
                                   }}
-                                  className={`h-full ${
-                                    item.score >= 95
+                                  className={`h-full ${item.score >= 95
                                       ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                                       : item.score >= 90
-                                      ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                                      : "bg-gradient-to-r from-red-500 to-red-600"
-                                  }`}
+                                        ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                                        : "bg-gradient-to-r from-red-500 to-red-600"
+                                    }`}
                                 />
                               </div>
                             </div>
@@ -1629,11 +1627,10 @@ export function CarbonDashboard() {
                                 Active Alerts
                               </span>
                               <span
-                                className={`font-medium ${
-                                  item.alerts > 0
+                                className={`font-medium ${item.alerts > 0
                                     ? "text-orange-400"
                                     : "text-emerald-400"
-                                }`}
+                                  }`}
                               >
                                 {item.alerts}
                               </span>
@@ -1747,8 +1744,8 @@ export function CarbonDashboard() {
                             audit.status === "Passed"
                               ? "bg-emerald-900/50 text-emerald-400 border-emerald-500/30"
                               : audit.status === "In Progress"
-                              ? "bg-orange-900/50 text-orange-400 border-orange-500/30"
-                              : "bg-slate-700/50 text-slate-400 border-slate-600/30"
+                                ? "bg-orange-900/50 text-orange-400 border-orange-500/30"
+                                : "bg-slate-700/50 text-slate-400 border-slate-600/30"
                           }
                         >
                           {audit.status}
@@ -1832,8 +1829,8 @@ export function CarbonDashboard() {
                   <div className="text-xl font-bold text-white">
                     {selectedProject.co2Reduction?.total
                       ? `${parseInt(
-                          selectedProject.co2Reduction.total
-                        ).toLocaleString()} Tokens`
+                        selectedProject.co2Reduction.total
+                      ).toLocaleString()} Tokens`
                       : selectedProject.impact || " Tokens"}
                   </div>
                 </div>
@@ -1842,8 +1839,8 @@ export function CarbonDashboard() {
                   <div className="text-xl font-bold text-emerald-400">
                     {selectedProject.co2Reduction?.total
                       ? `${parseInt(
-                          selectedProject.co2Reduction.total
-                        ).toLocaleString()} tCO2e`
+                        selectedProject.co2Reduction.total
+                      ).toLocaleString()} tCO2e`
                       : selectedProject.impact || " tCO2e"}
                   </div>
                 </div>
@@ -2023,15 +2020,23 @@ export function CarbonDashboard() {
               <div className="flex gap-3 pt-4">
                 <Button
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                  onClick={() => viewProjectOnBlockchain(selectedProject)}
+                  onClick={() => viewTokenOnBlockchain(selectedProject)}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  View on CO2e Chain
+                  View Token on CO2e Chain
                 </Button>
+                <Button
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  onClick={() => viewCertOnBlockchain(selectedProject)}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Cert on CO2e Chain
+                </Button>                
                 <Button
                   variant="outline"
                   className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
                 >
+
                   <Download className="w-4 h-4 mr-2" />
                   Download Report
                 </Button>

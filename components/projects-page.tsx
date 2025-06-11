@@ -53,7 +53,7 @@ import { co2eApi } from "@/lib/co2e-api";
 import { initializeProjectData } from "@/lib/project-data-manager";
 import { useDebouncedFilter } from "@/hooks/use-debounced-filter";
 import { usePerformance } from "@/hooks/use-performance";
-import { viewProjectOnBlockchain } from "@/lib/blockchain-utils";
+import { viewTokenOnBlockchain,viewCertOnBlockchain } from "@/lib/blockchain-utils";
 
 export function ProjectsPage() {
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -834,11 +834,18 @@ export function ProjectsPage() {
               <div className="flex gap-3 pt-4">
                 <Button
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                  onClick={() => viewProjectOnBlockchain(selectedProject)}
+                  onClick={() => viewTokenOnBlockchain(selectedProject)}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  View on Blockchain
+                  View Token on CO2e Chain
                 </Button>
+                <Button
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  onClick={() => viewCertOnBlockchain(selectedProject)}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Cert on CO2e Chain
+                </Button>                
                 <Button
                   variant="outline"
                   className="border-slate-700 text-slate-300 hover:bg-slate-700/50"

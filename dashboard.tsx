@@ -145,7 +145,7 @@ export default function BlockedgeDashboard() {
               </span>
             </div>
             <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200">
-              Enterprise
+              Beta Version
             </Badge>
           </div>
 

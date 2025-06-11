@@ -201,7 +201,7 @@ export function getTokenExplorerUrl(
 /**
  * Handle blockchain viewing for carbon credit projects
  */
-export function viewProjectOnBlockchain(project: any): void {
+export function viewTokenOnBlockchain(project: any): void {
   if (!project) {
     console.error("No project provided");
     return;
@@ -218,14 +218,40 @@ export function viewProjectOnBlockchain(project: any): void {
     return;
   }
 
+  // Try legacy token field (for BlockEdge API format)
+  if (project.token && isValidAddress(project.token)) {
+    console.log(
+      `Opening CO2e Chain explorer for token ${project.name}:`,
+      project.token
+    );
+    openTokenInExplorer(project.token, 'co2e');
+    return;
+  }
+
+  // No valid address found
+  console.warn("No valid blockchain address found for project:", project.name);
+
+  // Show user-friendly message
+  if (typeof window !== "undefined") {
+    alert('Blockchain information not available for this project. Please check if the project has been tokenized on CO2e Chain.');
+  }
+}
+export function viewCertOnBlockchain(project: any): void {
+  if (!project) {
+    console.error("No project provided");
+    return;
+  }
+
+
+
   // Try certificate address as fallback
-  if (project.cert && isValidAddress(project.cert)) {
+  if (project.certContract && isValidAddress(project.certContract)) {
     console.log(
       `Opening CO2e Chain explorer for certificate ${project.name}:`,
       project.cert
     );
     // Use CO2e Chain explorer specifically
-    openTokenInExplorer(project.cert, 'co2e');
+    openTokenInExplorer(project.certContract, 'co2e');
     return;
   }
 
