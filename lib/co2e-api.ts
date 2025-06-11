@@ -1509,4 +1509,19 @@ class Co2eApiService {
   }
 }
 
+// Fetch NFT metadata from CO2E API
+export async function fetchNFTMetadata(certAddress: string, tokenId: string = "0"): Promise<any> {
+  try {
+    const response = await fetch(`https://exp.co2e.cc/api/v2/tokens/${certAddress}/instances/${tokenId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching NFT metadata:", error);
+    return null;
+  }
+}
+
 export const co2eApi = new Co2eApiService();

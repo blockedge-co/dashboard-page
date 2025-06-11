@@ -49,7 +49,7 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { co2eApi } from "@/lib/co2e-api";
+import { co2eApi, fetchNFTMetadata } from "@/lib/co2e-api";
 import { initializeProjectData } from "@/lib/project-data-manager";
 import { useDebouncedFilter } from "@/hooks/use-debounced-filter";
 import { usePerformance } from "@/hooks/use-performance";
@@ -65,6 +65,8 @@ export function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [nftMetadata, setNftMetadata] = useState<any>(null);
+  const [loadingNftMetadata, setLoadingNftMetadata] = useState(false);
 
   // Generate impact trend data based on real project count
   const generateImpactData = useCallback((projectCount: number) => {
@@ -120,9 +122,29 @@ export function ProjectsPage() {
   }, []);
 
   // Memoized handler for viewing project details
-  const handleViewProjectDetails = useCallback((project: any) => {
+  const handleViewProjectDetails = useCallback(async (project: any) => {
     setSelectedProject(project);
     setShowProjectDetails(true);
+    setNftMetadata(null);
+    setLoadingNftMetadata(true);
+
+    // Fetch NFT metadata if cert contract exists
+    if (project.certContract) {
+      try {
+        console.log(`Fetching NFT metadata for cert: ${project.certContract}`);
+        const metadata = await fetchNFTMetadata(project.certContract, "0");
+        if (metadata) {
+          console.log("NFT metadata received:", metadata);
+          setNftMetadata(metadata);
+        }
+      } catch (error) {
+        console.error("Error fetching NFT metadata:", error);
+      } finally {
+        setLoadingNftMetadata(false);
+      }
+    } else {
+      setLoadingNftMetadata(false);
+    }
   }, []);
 
   // Memoized filter functions
@@ -648,15 +670,20 @@ export function ProjectsPage() {
             <div className="p-6 border-b border-slate-700 flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  {selectedProject.name}
+                  {nftMetadata?.metadata?.name || selectedProject.name}
                 </h2>
                 <div className="flex items-center gap-2 mb-2">
-
                   <Badge
                     variant="outline"
                     className="text-slate-300 border-slate-600"
                   >
-                    {selectedProject.type}
+                    {nftMetadata?.metadata?.attributes?.find((attr: any) => attr.trait_type === "Credit category")?.value || selectedProject.type}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="text-slate-300 border-slate-600"
+                  >
+                    {nftMetadata?.token?.type || "ERC-721"}
                   </Badge>
                   <Badge
                     variant="outline"
@@ -666,9 +693,11 @@ export function ProjectsPage() {
                   </Badge>
                 </div>
                 <p className="text-slate-400">
-                  Carbon credit project focusing on{" "}
-                  {selectedProject.type.toLowerCase()} initiatives in{" "}
-                  {selectedProject.location}.
+                  {nftMetadata?.metadata?.description ? (
+                    <span className="line-clamp-2">{nftMetadata.metadata.description}</span>
+                  ) : (
+                    <>Carbon credit project focusing on {selectedProject.type.toLowerCase()} initiatives in {selectedProject.location}.</>
+                  )}
                 </p>
               </div>
               <Button
@@ -683,6 +712,19 @@ export function ProjectsPage() {
 
             {/* Content */}
             <div className="p-6 space-y-6">
+              {/* NFT Image if available */}
+              {(nftMetadata?.metadata?.image || nftMetadata?.image_url) && (
+                <div className="flex justify-center mb-6">
+                  <img 
+                    src={nftMetadata.metadata?.image || nftMetadata.image_url} 
+                    alt={nftMetadata?.metadata?.name || selectedProject.name}
+                    className="rounded-lg shadow-lg max-h-64 object-contain bg-slate-800 p-2"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
               {/* Project Location */}
               <div className="flex items-center gap-2 p-4 bg-slate-700/50 rounded-lg">
                 <MapPin className="w-4 h-4 text-emerald-400" />
@@ -697,19 +739,44 @@ export function ProjectsPage() {
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Current Supply</div>
                   <div className="text-xl font-bold text-white">
-                    {selectedProject.totalSupply || "N/A"} Tokens
+                    {loadingNftMetadata ? (
+                      <span className="animate-pulse">Loading...</span>
+                    ) : (
+                      <>{selectedProject.totalSupply || "N/A"} Tokens</>
+                    )}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">CO2 Impact</div>
                   <div className="text-xl font-bold text-emerald-400">
-                    {selectedProject.co2Reduction.total}  {selectedProject.co2Reduction.unit}
+                    {/* Always use project data for CO2 Impact, not the Amount from NFT */}
+                    {selectedProject.co2Reduction.total} {selectedProject.co2Reduction.unit}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Vintage Year</div>
                   <div className="text-xl font-bold text-white">
-                    {selectedProject.vintage || "2024"}
+                    {loadingNftMetadata ? (
+                      <span className="animate-pulse">Loading...</span>
+                    ) : (
+                      <>
+                        {nftMetadata?.metadata?.attributes?.find((attr: any) => attr.trait_type === "Vintage")?.value || 
+                         selectedProject.vintage || "2024"}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="bg-slate-700/50 rounded-lg p-4">
+                  <div className="text-sm text-slate-400">Methodology</div>
+                  <div className="text-xl font-bold text-white">
+                    {loadingNftMetadata ? (
+                      <span className="animate-pulse">Loading...</span>
+                    ) : (
+                      <>
+                        {nftMetadata?.metadata?.attributes?.find((attr: any) => attr.trait_type === "Methodology")?.value || 
+                         selectedProject.methodology || "N/A"}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -721,24 +788,55 @@ export function ProjectsPage() {
                     Project Information
                   </h3>
                   <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-slate-400">
-                        Project Type
-                      </span>
-                      <p className="text-white">{selectedProject.type}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">Location</span>
-                      <p className="text-white">{selectedProject.location}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">Project ID</span>
-                      <p className="text-white">#{selectedProject.id}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">Registry</span>
-                      <p className="text-white">{selectedProject.registry || "Verified Registry"}</p>
-                    </div>
+                    {loadingNftMetadata ? (
+                      <div className="animate-pulse space-y-3">
+                        <div className="h-4 bg-slate-700 rounded w-3/4"></div>
+                        <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+                        <div className="h-4 bg-slate-700 rounded w-2/3"></div>
+                        <div className="h-4 bg-slate-700 rounded w-5/6"></div>
+                        <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+                        <div className="h-4 bg-slate-700 rounded w-2/3"></div>
+                      </div>
+                    ) : (
+                      <>
+                        {nftMetadata?.metadata?.attributes ? (
+                          <>
+                            {/* Display all NFT attributes except Amount */}
+                            {nftMetadata.metadata.attributes
+                              .filter((attr: any) => attr.trait_type !== "Amount")
+                              .map((attr: any, index: number) => (
+                                <div key={index}>
+                                  <span className="text-sm text-slate-400">
+                                    {attr.trait_type}
+                                  </span>
+                                  <p className="text-white">{attr.value}</p>
+                                </div>
+                              ))}
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <span className="text-sm text-slate-400">
+                                Project Type
+                              </span>
+                              <p className="text-white">{selectedProject.type}</p>
+                            </div>
+                            <div>
+                              <span className="text-sm text-slate-400">Location</span>
+                              <p className="text-white">{selectedProject.location}</p>
+                            </div>
+                            <div>
+                              <span className="text-sm text-slate-400">Project ID</span>
+                              <p className="text-white">#{selectedProject.id}</p>
+                            </div>
+                            <div>
+                              <span className="text-sm text-slate-400">Registry</span>
+                              <p className="text-white">{selectedProject.registry || "Verified Registry"}</p>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -839,6 +937,16 @@ export function ProjectsPage() {
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View on Blockchain
                 </Button>
+                {nftMetadata?.metadata?.url && (
+                  <Button
+                    variant="outline"
+                    className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
+                    onClick={() => window.open(nftMetadata.metadata.url, '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    View Registry
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
