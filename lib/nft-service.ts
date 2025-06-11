@@ -102,7 +102,7 @@ class NFTService {
       const endpoints = [
         `/tokens/${contractAddress}`,
         `/tokens/${contractAddress}/instances/1`,
-        `/address/${contractAddress}`,
+        `/addresses/${contractAddress}`,
       ];
 
       for (const endpoint of endpoints) {

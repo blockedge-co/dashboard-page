@@ -510,14 +510,7 @@ export function ProjectsPage() {
                             </Badge>
                           )}
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-white">
-                            {project.price || "$45.00"}
-                          </div>
-                          <div className="text-xs text-emerald-400">
-                            {project.change || "+5.2%"}
-                          </div>
-                        </div>
+
                       </div>
                     </div>
                   </CardHeader>
@@ -744,7 +737,7 @@ export function ProjectsPage() {
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Current Price</div>
                   <div className="text-xl font-bold text-emerald-400">
-                    {selectedProject.price || "$42.50"}
+                    {selectedProject.price || "--"}
                   </div>
                 </div>
               </div>

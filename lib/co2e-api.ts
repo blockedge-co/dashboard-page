@@ -379,8 +379,8 @@ class Co2eApiService {
             project.metrics = metricsData;
 
             // Get real market pricing data
-            const pricingData = await this.fetchRealPricingData(project.tokenAddress, project.methodology);
-            project.pricing = pricingData;
+            // const pricingData = await this.fetchRealPricingData(project.tokenAddress, project.methodology);
+            // project.pricing = pricingData;
 
             // Update token name if available
             if (realTokenData.name && realTokenData.name !== "Unknown") {
@@ -1040,7 +1040,7 @@ class Co2eApiService {
       );
       
       const addressResponse = await this.fetchWithRetry(
-        `${BASE_URL}/address/${tokenAddress}`
+        `${BASE_URL}/addresses/${tokenAddress}`
       );
 
       let transfers = 0;
