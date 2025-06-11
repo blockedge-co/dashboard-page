@@ -23,7 +23,6 @@ import {
   Award,
   Eye,
   Lock,
-  Briefcase,
   Target,
 } from "lucide-react"
 import { MoreHorizontal, RefreshCw } from "lucide-react" // Importing MoreHorizontal and RefreshCw
@@ -435,10 +434,6 @@ export default function BlockedgeDashboard() {
                           <Button size="sm" className="flex-1">
                             <Eye className="w-3 h-3 mr-1" />
                             View Details
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Briefcase className="w-3 h-3 mr-1" />
-                            Invest
                           </Button>
                         </div>
                       </CardContent>

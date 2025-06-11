@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react"
 import { motion } from "framer-motion"
 import {
   TrendingUp,
@@ -26,6 +26,9 @@ import {
   Target,
   RefreshCw,
   MoreHorizontal,
+  X,
+  Copy,
+  ExternalLink,
 } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,6 +41,10 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Area, AreaChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts"
 import { co2eApi } from "@/lib/co2e-api"
 import { initializeProjectData } from "@/lib/project-data-manager"
+import { useDebouncedFilter } from "@/hooks/use-debounced-filter"
+import { usePerformance } from "@/hooks/use-performance"
+import ProjectCard from "./project-card"
+import { LoadingText, LoadingMetric, LoadingSkeleton } from "./loading-skeleton"
 
 const marketData = [
   { month: "Jan", price: 45, volume: 120, sentiment: 72 },
@@ -138,14 +145,72 @@ const complianceData = [
 export function CarbonDashboard() {
   const [activeTab, setActiveTab] = useState("portfolio")
   const [selectedFilter, setSelectedFilter] = useState("all")
+  const [selectedRegistry, setSelectedRegistry] = useState("all")
   const [realData, setRealData] = useState(co2eApi.getRealDashboardData())
   const [projects, setProjects] = useState<any[]>([])
   const [projectStats, setProjectStats] = useState<any>(null)
   const [animatedMetrics, setAnimatedMetrics] = useState(realData.heroMetrics.map(() => 0))
+  const [selectedProject, setSelectedProject] = useState<any>(null)
+  const [showProjectDetails, setShowProjectDetails] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [dataLoaded, setDataLoaded] = useState(false)
+  
+  // Performance optimization
+  const { shouldReduceAnimations } = usePerformance()
+
+  // Memoized filter functions for better performance
+  const filterFunctions = useMemo(() => ({
+    byType: (project: any, type: string) => {
+      if (type === "renewable") {
+        return project.type.toLowerCase().includes("renewable") || 
+               project.type.toLowerCase().includes("energy")
+      }
+      if (type === "forest") {
+        return project.type.toLowerCase().includes("forest") || 
+               project.type.toLowerCase().includes("conservation")
+      }
+      if (type === "industrial") {
+        return project.type.toLowerCase().includes("industrial") || 
+               project.type.toLowerCase().includes("efficiency")
+      }
+      return true
+    },
+    byRegistry: (project: any, registry: string) => {
+      if (!project.registry) return false
+      const projectRegistry = project.registry.toLowerCase()
+      
+      switch (registry) {
+        case "verra":
+          return projectRegistry.includes("verra")
+        case "tuv-sud":
+          return projectRegistry.includes("tuv") || projectRegistry.includes("sud")
+        case "dnv":
+          return projectRegistry.includes("dnv")
+        case "irec":
+          return projectRegistry.includes("irec") || projectRegistry.includes("i-rec")
+        default:
+          return true
+      }
+    }
+  }), [])
+
+  // Use debounced filtering for better performance
+  const filteredProjects = useDebouncedFilter(
+    projects,
+    {
+      type: selectedFilter,
+      registry: selectedRegistry
+    },
+    filterFunctions,
+    300 // 300ms debounce delay
+  )
 
   // Initialize R2 data source and fetch real data on component mount
   useEffect(() => {
     const fetchRealData = async () => {
+      setIsLoading(true)
+      setDataLoaded(false)
+      
       try {
         // Initialize with your BlockEdge R2 URL
         initializeProjectData('https://asset.blockedge.co/blockedge-co2e-project.json')
@@ -158,99 +223,127 @@ export function CarbonDashboard() {
           co2eApi.getProjectStats()
         ])
         
-        // Update projects data
-        setProjects(projectsData)
-        setProjectStats(projectStatsData)
-        
-        // Update with real data if available
-        setRealData(prev => ({
-          ...prev,
-          recentTransactions: transactions.slice(0, 6).map((tx, index) => ({
-            id: `TX${(index + 1).toString().padStart(3, '0')}`,
-            type: tx.method || "Contract Call",
-            hash: tx.hash,
-            amount: `${tx.value || "0"} CO2E`,
-            value: tx.value || "0",
-            from: tx.from?.hash || "",
-            to: tx.to?.hash || "",
-            timestamp: tx.timestamp || "Recently",
-            status: tx.status || "Success",
-          })),
-          recentBlocks: blocks.slice(0, 5).map(block => ({
-            number: block.number,
-            timestamp: block.timestamp,
-            transactions: block.transaction_count,
-            gasUsed: block.gas_used,
-            gasLimit: block.gas_limit
-          })),
-          heroMetrics: [
-            {
-              title: "Total Projects",
-              value: projectStatsData.total.toString(),
-              change: "+8.7%",
-              trend: "up" as const,
-              icon: Leaf,
-              pulse: true,
-              color: "from-teal-500 to-cyan-600",
-            },
-            {
-              title: "CO2 Reduction", 
-              value: `${projectStatsData.totalCO2Reduction} tons`,
-              change: "+23",
-              trend: "up" as const,
-              icon: Award,
-              pulse: false,
-              color: "from-cyan-500 to-sky-600",
-            },
-            {
-              title: "Total Blocks",
-              value: stats.total_blocks || realData.heroMetrics[2].value,
-              change: "+5.2%",
-              trend: "up" as const,
-              icon: Building2,
-              pulse: true,
-              color: "from-sky-500 to-indigo-600",
-            },
-            {
-              title: "Average Rating",
-              value: projectStatsData.averageRating.toFixed(1),
-              change: "+0.1",
-              trend: "up" as const,
-              icon: DollarSign,
-              pulse: true,
-              color: "from-emerald-500 to-teal-600",
-            }
-          ]
-        }))
+        // Only update if we have valid data (not empty or zero values)
+        if (projectsData && projectsData.length > 0) {
+          setProjects(projectsData)
+          setProjectStats(projectStatsData)
+          setDataLoaded(true)
+          
+          // Update with real data if available
+          setRealData(prev => ({
+            ...prev,
+            recentTransactions: transactions.slice(0, 6).map((tx, index) => ({
+              id: `TX${(index + 1).toString().padStart(3, '0')}`,
+              type: tx.method || "Contract Call",
+              hash: tx.hash,
+              amount: `${tx.value || "0"} CO2E`,
+              value: tx.value || "0",
+              from: tx.from?.hash || "",
+              to: tx.to?.hash || "",
+              timestamp: tx.timestamp || "Recently",
+              status: tx.status || "Success",
+            })),
+            recentBlocks: blocks.slice(0, 5).map(block => ({
+              number: block.number,
+              timestamp: block.timestamp,
+              transactions: block.transaction_count,
+              gasUsed: block.gas_used,
+              gasLimit: block.gas_limit
+            })),
+            heroMetrics: [
+              {
+                title: "Total Projects",
+                value: projectStatsData.total > 0 ? projectStatsData.total.toString() : "—",
+                change: "+8.7%",
+                trend: "up" as const,
+                icon: Leaf,
+                pulse: true,
+                color: "from-teal-500 to-cyan-600",
+              },
+              {
+                title: "CO2 Reduction", 
+                value: projectStatsData.totalCO2Reduction && projectStatsData.totalCO2Reduction !== "0" ? `${projectStatsData.totalCO2Reduction} tons` : "—",
+                change: "+23",
+                trend: "up" as const,
+                icon: Award,
+                pulse: false,
+                color: "from-cyan-500 to-sky-600",
+              },
+              {
+                title: "Total Blocks",
+                value: stats.total_blocks && stats.total_blocks !== "0" ? stats.total_blocks : realData.heroMetrics[2].value,
+                change: "+5.2%",
+                trend: "up" as const,
+                icon: Building2,
+                pulse: true,
+                color: "from-sky-500 to-indigo-600",
+              },
+              {
+                title: "Average Rating",
+                value: projectStatsData.averageRating > 0 ? projectStatsData.averageRating.toFixed(1) : "—",
+                change: "+0.1",
+                trend: "up" as const,
+                icon: DollarSign,
+                pulse: true,
+                color: "from-emerald-500 to-teal-600",
+              }
+            ]
+          }))
+        }
       } catch (error) {
         console.error('Error fetching real data:', error)
+        // Keep loading state if there's an error
+        setDataLoaded(false)
+      } finally {
+        setIsLoading(false)
       }
     }
 
     fetchRealData()
   }, [])
 
-  // Animate metrics on load
+  // Animate metrics on load (optimized for performance)
   useEffect(() => {
+    if (shouldReduceAnimations) {
+      // Instantly set to 100% if animations are disabled
+      setAnimatedMetrics(realData.heroMetrics.map(() => 100))
+      return
+    }
+
     const interval = setInterval(() => {
       setAnimatedMetrics((prev) => {
         const newValues = [...prev]
+        let allComplete = true
+        
         realData.heroMetrics.forEach((_, index) => {
           if (newValues[index] < 100) {
-            newValues[index] += 5
+            newValues[index] += 10 // Faster increment for better performance
             if (newValues[index] > 100) newValues[index] = 100
+            allComplete = false
           }
         })
+        
+        // Stop interval when all animations are complete
+        if (allComplete) {
+          clearInterval(interval)
+        }
+        
         return newValues
       })
-    }, 50)
+    }, 100) // Slower interval for better performance
 
     return () => clearInterval(interval)
-  }, [realData.heroMetrics])
+  }, [realData.heroMetrics, shouldReduceAnimations])
 
-  // Simulate real-time data updates with CO2e chain data
+  // Simulate real-time data updates with CO2e chain data (optimized)
   const [marketDataState, setMarketDataState] = useState(co2eApi.generateMarketData())
+  
   useEffect(() => {
+    if (shouldReduceAnimations) {
+      // Skip real-time updates on slower devices
+      return
+    }
+
     const interval = setInterval(() => {
       setMarketDataState((prevData) => {
         return prevData.map((item) => ({
@@ -259,10 +352,10 @@ export function CarbonDashboard() {
           volume: item.volume * (1 + (Math.random() * 0.03 - 0.015)),
         }))
       })
-    }, 3000)
+    }, 5000) // Slower updates for better performance
 
     return () => clearInterval(interval)
-  }, [])
+  }, [shouldReduceAnimations])
 
   // 3D card effect refs
   const card1Ref = useRef(null)
@@ -270,8 +363,14 @@ export function CarbonDashboard() {
   const card3Ref = useRef(null)
   const card4Ref = useRef(null)
 
-  // Handle 3D card effect
-  const handleMouseMove = (e, ref) => {
+
+  // Memoized handlers for better performance
+  const handleViewProjectDetails = useCallback((project: any) => {
+    setSelectedProject(project)
+    setShowProjectDetails(true)
+  }, [])
+
+  const handleMouseMove = useCallback((e: any, ref: any) => {
     if (!ref.current) return
     const card = ref.current
     const rect = card.getBoundingClientRect()
@@ -283,12 +382,12 @@ export function CarbonDashboard() {
     const rotateY = (centerX - x) / 10
 
     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`
-  }
+  }, [])
 
-  const handleMouseLeave = (ref) => {
+  const handleMouseLeave = useCallback((ref: any) => {
     if (!ref.current) return
     ref.current.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`
-  }
+  }, [])
 
   return (
     <div className="container mx-auto p-6 space-y-8">
@@ -316,14 +415,18 @@ export function CarbonDashboard() {
                     <div>
                       <p className="text-sm font-medium text-slate-400">{metric.title}</p>
                       <div className="h-8 flex items-end">
-                        <motion.p
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                          className="text-3xl font-bold text-white"
-                        >
-                          {animatedMetrics[index] === 100 ? metric.value : "—"}
-                        </motion.p>
+                        {isLoading || !dataLoaded ? (
+                          <LoadingText text="Loading..." />
+                        ) : (
+                          <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+                            className="text-3xl font-bold text-white"
+                          >
+                            {animatedMetrics[index] === 100 ? metric.value : "—"}
+                          </motion.p>
+                        )}
                       </div>
                       <div className="flex items-center gap-1 mt-2">
                         {metric.trend === "up" ? (
@@ -627,6 +730,18 @@ export function CarbonDashboard() {
                         <SelectItem value="industrial">Industrial Efficiency</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Select value={selectedRegistry} onValueChange={setSelectedRegistry}>
+                      <SelectTrigger className="w-48 bg-slate-900/80 border-slate-700 text-slate-300">
+                        <SelectValue placeholder="Filter by registry" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-700 text-slate-300">
+                        <SelectItem value="all">All Registries</SelectItem>
+                        <SelectItem value="verra">Verra</SelectItem>
+                        <SelectItem value="tuv-sud">TUV SUD</SelectItem>
+                        <SelectItem value="dnv">DNV</SelectItem>
+                        <SelectItem value="irec">I-REC</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button
                       variant="outline"
                       size="icon"
@@ -645,102 +760,48 @@ export function CarbonDashboard() {
                 </div>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {(projects.length > 0 ? projects.slice(0, 6) : realData.projects || []).map((project, index) => (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.1 * index }}
-                      whileHover={{ y: -5 }}
-                    >
-                      <Card className="bg-slate-800/80 border-slate-700/50 overflow-hidden hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300">
-                        <div className="relative h-40 overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent z-10" />
-                          <img
-                            src={project.images?.thumbnail || project.image || "/placeholder.svg"}
-                            alt={project.name}
-                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                          />
-                          <div className="absolute top-2 right-2 z-20">
-                            <Badge
-                              variant="outline"
-                              className="bg-emerald-900/80 text-emerald-400 border-emerald-500/30 backdrop-blur-sm"
-                            >
-                              {project.rating || "N/A"}
-                            </Badge>
-                          </div>
-                          <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-slate-300" />
-                            <span className="text-xs text-slate-300">{project.location}</span>
-                          </div>
-                        </div>
+                {isLoading || (!dataLoaded && projects.length === 0) ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map((index) => (
+                      <Card key={index} className="bg-slate-800/80 border-slate-700/50">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-lg text-white">{project.name}</CardTitle>
-                          <CardDescription className="text-slate-400">{project.type}</CardDescription>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 space-y-2">
+                              <LoadingSkeleton className="h-6 w-3/4" />
+                              <LoadingSkeleton className="h-4 w-1/2" />
+                              <LoadingSkeleton className="h-3 w-1/3" />
+                            </div>
+                            <LoadingSkeleton className="h-6 w-12" />
+                          </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <span className="text-slate-500">Current Supply</span>
-                              <p className="font-semibold text-white">{project.currentSupply || project.tokens || "N/A"}</p>
-                            </div>
-                            <div>
-                              <span className="text-slate-500">CO2 Impact</span>
-                              <p className="font-semibold text-white">{project.co2Reduction?.total ? `${parseInt(project.co2Reduction.total).toLocaleString()} tons` : project.impact || "N/A"}</p>
+                              <LoadingSkeleton className="h-3 w-20 mb-1" />
+                              <LoadingSkeleton className="h-4 w-16" />
                             </div>
                             <div>
-                              <span className="text-slate-500">Liquidity</span>
-                              <p className="font-semibold text-white capitalize">{project.liquidity || "Medium"}</p>
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Vintage</span>
-                              <p className="font-semibold text-white">{project.vintage || "2024"}</p>
+                              <LoadingSkeleton className="h-3 w-16 mb-1" />
+                              <LoadingSkeleton className="h-4 w-20" />
                             </div>
                           </div>
-
-                          <div>
-                            <span className="text-sm text-slate-500">Compliance</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {(project.compliance || ["EU Taxonomy", "TCFD"]).map((badge) => (
-                                <Badge
-                                  key={badge}
-                                  variant="outline"
-                                  className="text-xs bg-slate-700/50 text-slate-300 border-slate-600"
-                                >
-                                  {badge}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <span className="text-sm text-slate-500">Methodology</span>
-                            <p className="text-sm font-medium mt-1 text-slate-300">{project.methodology || project.backing || "IREC Standard"}</p>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                            >
-                              <Eye className="w-3 h-3 mr-1" />
-                              View Details
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
-                            >
-                              <Briefcase className="w-3 h-3 mr-1" />
-                              Invest
-                            </Button>
-                          </div>
+                          <LoadingSkeleton className="h-8 w-full" />
                         </CardContent>
                       </Card>
-                    </motion.div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {(filteredProjects.length > 0 ? filteredProjects.slice(0, 6) : projects.length > 0 ? projects.slice(0, 6) : realData.projects || []).map((project, index) => (
+                      <ProjectCard
+                        key={project.id}
+                        project={project}
+                        index={index}
+                        onViewDetails={handleViewProjectDetails}
+                      />
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1384,6 +1445,174 @@ export function CarbonDashboard() {
           </TabsContent>
         </Tabs>
       </motion.div>
+
+      {/* Project Details Modal */}
+      {showProjectDetails && selectedProject && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-700"
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-slate-700 flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">{selectedProject.name}</h2>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-emerald-900/50 text-emerald-400 border-emerald-500/30">
+                    {selectedProject.rating || "AA+"}
+                  </Badge>
+                  <Badge variant="outline" className="text-slate-300 border-slate-600">
+                    {selectedProject.methodology || "IREC"}
+                  </Badge>
+                  <Badge variant="outline" className="text-slate-300 border-slate-600">
+                    {selectedProject.status || "Active"}
+                  </Badge>
+                </div>
+                <p className="text-slate-400">{selectedProject.description}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowProjectDetails(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Project Location */}
+              <div className="flex items-center gap-2 p-4 bg-slate-700/50 rounded-lg">
+                <MapPin className="w-4 h-4 text-emerald-400" />
+                <span className="text-slate-300">{selectedProject.location}</span>
+              </div>
+
+              {/* Key Metrics */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
+                  <div className="text-sm text-slate-400">Current Supply</div>
+                  <div className="text-xl font-bold text-white">
+                    {selectedProject.currentSupply || selectedProject.tokens || "N/A"}
+                  </div>
+                </div>
+                <div className="bg-slate-700/50 rounded-lg p-4">
+                  <div className="text-sm text-slate-400">CO2 Reduction</div>
+                  <div className="text-xl font-bold text-emerald-400">
+                    {selectedProject.co2Reduction?.total ? 
+                      `${parseInt(selectedProject.co2Reduction.total).toLocaleString()} tons` : 
+                      selectedProject.impact || "2M tons"
+                    }
+                  </div>
+                </div>
+                <div className="bg-slate-700/50 rounded-lg p-4">
+                  <div className="text-sm text-slate-400">Vintage Year</div>
+                  <div className="text-xl font-bold text-white">{selectedProject.vintage || "2024"}</div>
+                </div>
+                <div className="bg-slate-700/50 rounded-lg p-4">
+                  <div className="text-sm text-slate-400">Current Price</div>
+                  <div className="text-xl font-bold text-emerald-400">
+                    ${selectedProject.pricing?.currentPrice || "42.50"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Project Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white">Project Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-slate-400">Project Type</span>
+                      <p className="text-white">{selectedProject.type}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Country</span>
+                      <p className="text-white">{selectedProject.country || "International"}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Registry</span>
+                      <p className="text-white">{selectedProject.registry || "Verified Registry"}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Certification Body</span>
+                      <p className="text-white">{selectedProject.certificationBody || "Verified Registry"}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Project Developer</span>
+                      <p className="text-white">{selectedProject.projectDeveloper || "Project Developer"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white">Blockchain Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-slate-400">Token Address</span>
+                      <div className="flex items-center gap-2">
+                        <code className="text-sm bg-slate-700 px-2 py-1 rounded text-emerald-400">
+                          {selectedProject.tokenAddress?.slice(0, 10)}...{selectedProject.tokenAddress?.slice(-6)}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => navigator.clipboard.writeText(selectedProject.tokenAddress)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Total Supply</span>
+                      <p className="text-white">{selectedProject.totalSupply || "1,000,000"}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Holders</span>
+                      <p className="text-white">{selectedProject.holders || "156"}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Transfers</span>
+                      <p className="text-white">{selectedProject.transfers || "1,247"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Compliance */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Compliance Standards</h3>
+                <div className="flex flex-wrap gap-2">
+                  {(selectedProject.compliance || ["EU Taxonomy", "TCFD"]).map((standard: string) => (
+                    <Badge
+                      key={standard}
+                      variant="outline"
+                      className="bg-slate-700/50 text-slate-300 border-slate-600"
+                    >
+                      {standard}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View on CO2e Chain
+                </Button>
+                <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-700/50">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Report
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

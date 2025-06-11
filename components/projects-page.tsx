@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { motion } from "framer-motion"
 import {
   Globe,
@@ -8,7 +8,6 @@ import {
   Leaf,
   Award,
   Eye,
-  Briefcase,
   Filter,
   Download,
   Search,
@@ -24,6 +23,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts"
+import { useDebouncedFilter } from "@/hooks/use-debounced-filter"
+import { usePerformance } from "@/hooks/use-performance"
 
 const projects = [
   {
@@ -148,26 +149,49 @@ const impactData = [
 export function ProjectsPage() {
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [selectedType, setSelectedType] = useState("all")
+  const [selectedRegistry, setSelectedRegistry] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [filteredProjects, setFilteredProjects] = useState(projects)
+  
+  // Performance optimization
+  const { shouldReduceAnimations } = usePerformance()
 
-  useEffect(() => {
-    let filtered = projects
+  // Memoized filter functions
+  const filterFunctions = useMemo(() => ({
+    byType: (project: any, type: string) => 
+      type === "all" || project.type.toLowerCase().includes(type.toLowerCase()),
+    byRegistry: (project: any, registry: string) => {
+      if (registry === "all") return true
+      const projectRegistry = project.backing?.toLowerCase() || ""
+      switch (registry) {
+        case "verra":
+          return projectRegistry.includes("verra") || project.compliance?.includes("VCS")
+        case "tuv-sud":
+          return projectRegistry.includes("tuv") || projectRegistry.includes("sud")
+        case "dnv":
+          return projectRegistry.includes("dnv")
+        case "irec":
+          return projectRegistry.includes("irec") || project.compliance?.includes("GRI")
+        default:
+          return true
+      }
+    },
+    bySearch: (project: any, search: string) =>
+      project.name.toLowerCase().includes(search.toLowerCase()) ||
+      project.location.toLowerCase().includes(search.toLowerCase())
+  }), [])
 
-    if (selectedType !== "all") {
-      filtered = filtered.filter((project) => project.type.toLowerCase().includes(selectedType.toLowerCase()))
-    }
+  // Use debounced filtering
+  const filteredProjects = useDebouncedFilter(
+    projects,
+    {
+      type: selectedType,
+      registry: selectedRegistry,
+      search: searchQuery
+    },
+    filterFunctions,
+    300
+  )
 
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (project) =>
-          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.location.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    }
-
-    setFilteredProjects(filtered)
-  }, [selectedFilter, selectedType, searchQuery])
 
   return (
     <div className="container mx-auto p-6 space-y-8">
@@ -178,7 +202,7 @@ export function ProjectsPage() {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
               Global Carbon Projects
             </h1>
-            <p className="text-slate-400 mt-2">Discover and invest in verified carbon credit projects worldwide</p>
+            <p className="text-slate-400 mt-2">Discover verified carbon credit projects worldwide</p>
           </div>
           <div className="flex items-center gap-2">
             <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700">
@@ -311,6 +335,18 @@ export function ProjectsPage() {
                   <SelectItem value="removal">Carbon Removal</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={selectedRegistry} onValueChange={setSelectedRegistry}>
+                <SelectTrigger className="w-full sm:w-48 bg-slate-900/80 border-slate-700 text-slate-300">
+                  <SelectValue placeholder="Registry" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-700 text-slate-300">
+                  <SelectItem value="all">All Registries</SelectItem>
+                  <SelectItem value="verra">Verra</SelectItem>
+                  <SelectItem value="tuv-sud">TUV SUD</SelectItem>
+                  <SelectItem value="dnv">DNV</SelectItem>
+                  <SelectItem value="irec">I-REC</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={selectedFilter} onValueChange={setSelectedFilter}>
                 <SelectTrigger className="w-full sm:w-48 bg-slate-900/80 border-slate-700 text-slate-300">
                   <SelectValue placeholder="Filter by" />
@@ -351,46 +387,38 @@ export function ProjectsPage() {
               whileHover={{ y: -5 }}
             >
               <Card className="bg-slate-800/80 border-slate-700/50 overflow-hidden hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 h-full">
-                <div className="relative h-48 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent z-10" />
-                  <img
-                    src={project.image || "/placeholder.svg"}
-                    alt={project.name}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                  />
-                  <div className="absolute top-3 right-3 z-20 flex gap-2">
-                    <Badge
-                      variant="outline"
-                      className="bg-emerald-900/80 text-emerald-400 border-emerald-500/30 backdrop-blur-sm"
-                    >
-                      {project.rating}
-                    </Badge>
-                    {project.verified && (
-                      <Badge
-                        variant="outline"
-                        className="bg-blue-900/80 text-blue-400 border-blue-500/30 backdrop-blur-sm"
-                      >
-                        <Award className="w-3 h-3 mr-1" />
-                        Verified
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-slate-300" />
-                    <span className="text-sm text-slate-300">{project.location}</span>
-                  </div>
-                  <div className="absolute bottom-3 right-3 z-20">
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-white">{project.price}</div>
-                      <div className="text-xs text-emerald-400">{project.change}</div>
-                    </div>
-                  </div>
-                </div>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg text-white line-clamp-2">{project.name}</CardTitle>
                       <CardDescription className="text-slate-400 mt-1">{project.type}</CardDescription>
+                      <div className="flex items-center gap-1 mt-2">
+                        <MapPin className="w-3 h-3 text-slate-300" />
+                        <span className="text-sm text-slate-300">{project.location}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex gap-2">
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-900/80 text-emerald-400 border-emerald-500/30 backdrop-blur-sm"
+                        >
+                          {project.rating}
+                        </Badge>
+                        {project.verified && (
+                          <Badge
+                            variant="outline"
+                            className="bg-blue-900/80 text-blue-400 border-blue-500/30 backdrop-blur-sm"
+                          >
+                            <Award className="w-3 h-3 mr-1" />
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-white">{project.price}</div>
+                        <div className="text-xs text-emerald-400">{project.change}</div>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
@@ -453,17 +481,10 @@ export function ProjectsPage() {
                     <Button
                       size="sm"
                       className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                      onClick={() => console.log('View details for project:', project.id)}
                     >
                       <Eye className="w-3 h-3 mr-1" />
                       View Details
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
-                    >
-                      <Briefcase className="w-3 h-3 mr-1" />
-                      Invest
                     </Button>
                   </div>
                 </CardContent>
