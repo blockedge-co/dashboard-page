@@ -394,9 +394,13 @@ class Co2eApiService {
   // Fetch projects data from R2
   async fetchProjectsFromR2(): Promise<ProjectsResponse> {
     const config = getConfig();
-    const projectsDataUrl = config.r2.projectsDataUrl;
 
-    if (!projectsDataUrl) {
+    // Use local API proxy if enabled (for CORS issues in development)
+    let projectsDataUrl = config.r2.projectsDataUrl;
+    if (config.r2.useLocalProxy && typeof window !== "undefined") {
+      // We're in the browser and should use the local proxy
+      projectsDataUrl = "/api/projects";
+    } else if (!projectsDataUrl) {
       throw new Error(
         "Projects data URL not configured. Please set the URL using initializeProjectData() or environment variable NEXT_PUBLIC_PROJECTS_DATA_URL."
       );

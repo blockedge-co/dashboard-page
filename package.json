@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "verify-production": "node -e \"console.log('✅ Production configuration verified'); process.env.NEXT_PUBLIC_PROJECTS_DATA_URL ? console.log('✅ Data URL configured') : (console.error('❌ NEXT_PUBLIC_PROJECTS_DATA_URL not set'), process.exit(1))\""
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

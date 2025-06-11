@@ -5,6 +5,7 @@ export interface AppConfig {
   r2: {
     projectsDataUrl?: string;
     fallbackToSample: boolean;
+    useLocalProxy?: boolean; // Use local API proxy to avoid CORS
   };
 
   // API Configuration
@@ -32,6 +33,7 @@ export const defaultConfig: AppConfig = {
   r2: {
     projectsDataUrl: undefined, // Will be set when provided
     fallbackToSample: false, // Disabled for production - must use real data
+    useLocalProxy: true, // Use local API proxy to avoid CORS issues in development
   },
   api: {
     co2eChainBaseUrl: "https://exp.co2e.cc/api",

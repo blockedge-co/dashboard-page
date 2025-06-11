@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
+import { motion } from "framer-motion";
 import {
   TrendingUp,
   Globe,
@@ -29,22 +29,52 @@ import {
   X,
   Copy,
   ExternalLink,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Area, AreaChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts"
-import { co2eApi } from "@/lib/co2e-api"
-import { initializeProjectData } from "@/lib/project-data-manager"
-import { useDebouncedFilter } from "@/hooks/use-debounced-filter"
-import { usePerformance } from "@/hooks/use-performance"
-import ProjectCard from "./project-card"
-import { LoadingText, LoadingMetric, LoadingSkeleton } from "./loading-skeleton"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  Area,
+  AreaChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
+import { co2eApi } from "@/lib/co2e-api";
+import { initializeProjectData } from "@/lib/project-data-manager";
+import { useDebouncedFilter } from "@/hooks/use-debounced-filter";
+import { usePerformance } from "@/hooks/use-performance";
+import { viewProjectOnBlockchain } from "@/lib/blockchain-utils";
+import ProjectCard from "./project-card";
+import {
+  LoadingText,
+  LoadingMetric,
+  LoadingSkeleton,
+} from "./loading-skeleton";
 
 const marketData = [
   { month: "Jan", price: 45, volume: 120, sentiment: 72 },
@@ -55,7 +85,7 @@ const marketData = [
   { month: "Jun", price: 67, volume: 200, sentiment: 88 },
   { month: "Jul", price: 72, volume: 220, sentiment: 90 },
   { month: "Aug", price: 78, volume: 250, sentiment: 92 },
-]
+];
 
 const projects = [
   {
@@ -100,7 +130,7 @@ const projects = [
     vintage: "2024",
     image: "/placeholder.svg?height=400&width=600",
   },
-]
+];
 
 const transactions = [
   {
@@ -133,107 +163,162 @@ const transactions = [
     timestamp: "6 hours ago",
     status: "Completed",
   },
-]
+];
 
 const complianceData = [
   { jurisdiction: "EU", status: "Compliant", score: 98, alerts: 0 },
   { jurisdiction: "US", status: "Compliant", score: 95, alerts: 1 },
   { jurisdiction: "UK", status: "Compliant", score: 97, alerts: 0 },
   { jurisdiction: "APAC", status: "Review", score: 89, alerts: 3 },
-]
+];
 
 export function CarbonDashboard() {
-  const [activeTab, setActiveTab] = useState("portfolio")
-  const [selectedFilter, setSelectedFilter] = useState("all")
-  const [selectedRegistry, setSelectedRegistry] = useState("all")
-  const [realData, setRealData] = useState(co2eApi.getRealDashboardData())
-  const [projects, setProjects] = useState<any[]>([])
-  const [projectStats, setProjectStats] = useState<any>(null)
-  const [animatedMetrics, setAnimatedMetrics] = useState(realData.heroMetrics.map(() => 0))
-  const [selectedProject, setSelectedProject] = useState<any>(null)
-  const [showProjectDetails, setShowProjectDetails] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [dataLoaded, setDataLoaded] = useState(false)
-  
+  const [activeTab, setActiveTab] = useState("portfolio");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedRegistry, setSelectedRegistry] = useState("all");
+  type HeroMetric = {
+    title: string;
+    value: string;
+    change: string;
+    trend: "up" | "down";
+    icon: React.ComponentType<any>;
+    pulse: boolean;
+    color: string;
+  };
+
+  type RealDashboardData = {
+    heroMetrics: HeroMetric[];
+    recentTransactions: any[];
+    recentBlocks: any[];
+    networkStats: any;
+    projects?: any[];
+  };
+
+  // Map icon string to actual icon component
+  const iconMap: Record<string, React.ComponentType<any>> = {
+    DollarSign,
+    Leaf,
+    Award,
+    Building2,
+  };
+
+  const getInitialRealDashboardData = () => {
+    const data = co2eApi.getRealDashboardData();
+    return {
+      ...data,
+      heroMetrics: data.heroMetrics.map((metric: any) => ({
+        ...metric,
+        icon: iconMap[metric.icon] || DollarSign,
+      })),
+    };
+  };
+
+  const [realData, setRealData] = useState<RealDashboardData>(
+    getInitialRealDashboardData()
+  );
+  const [projects, setProjects] = useState<any[]>([]);
+  const [projectStats, setProjectStats] = useState<any>(null);
+  const [animatedMetrics, setAnimatedMetrics] = useState(
+    realData.heroMetrics.map(() => 0)
+  );
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
   // Performance optimization
-  const { shouldReduceAnimations } = usePerformance()
+  const { shouldReduceAnimations } = usePerformance();
 
   // Memoized filter functions for better performance
-  const filterFunctions = useMemo(() => ({
-    byType: (project: any, type: string) => {
-      if (type === "renewable") {
-        return project.type.toLowerCase().includes("renewable") || 
-               project.type.toLowerCase().includes("energy")
-      }
-      if (type === "forest") {
-        return project.type.toLowerCase().includes("forest") || 
-               project.type.toLowerCase().includes("conservation")
-      }
-      if (type === "industrial") {
-        return project.type.toLowerCase().includes("industrial") || 
-               project.type.toLowerCase().includes("efficiency")
-      }
-      return true
-    },
-    byRegistry: (project: any, registry: string) => {
-      if (!project.registry) return false
-      const projectRegistry = project.registry.toLowerCase()
-      
-      switch (registry) {
-        case "verra":
-          return projectRegistry.includes("verra")
-        case "tuv-sud":
-          return projectRegistry.includes("tuv") || projectRegistry.includes("sud")
-        case "dnv":
-          return projectRegistry.includes("dnv")
-        case "irec":
-          return projectRegistry.includes("irec") || projectRegistry.includes("i-rec")
-        default:
-          return true
-      }
-    }
-  }), [])
+  const filterFunctions = useMemo(
+    () => ({
+      byType: (project: any, type: string) => {
+        if (type === "renewable") {
+          return (
+            project.type.toLowerCase().includes("renewable") ||
+            project.type.toLowerCase().includes("energy")
+          );
+        }
+        if (type === "forest") {
+          return (
+            project.type.toLowerCase().includes("forest") ||
+            project.type.toLowerCase().includes("conservation")
+          );
+        }
+        if (type === "industrial") {
+          return (
+            project.type.toLowerCase().includes("industrial") ||
+            project.type.toLowerCase().includes("efficiency")
+          );
+        }
+        return true;
+      },
+      byRegistry: (project: any, registry: string) => {
+        if (!project.registry) return false;
+        const projectRegistry = project.registry.toLowerCase();
+
+        switch (registry) {
+          case "verra":
+            return projectRegistry.includes("verra");
+          case "tuv-sud":
+            return (
+              projectRegistry.includes("tuv") || projectRegistry.includes("sud")
+            );
+          case "dnv":
+            return projectRegistry.includes("dnv");
+          case "irec":
+            return (
+              projectRegistry.includes("irec") ||
+              projectRegistry.includes("i-rec")
+            );
+          default:
+            return true;
+        }
+      },
+    }),
+    []
+  );
 
   // Use debounced filtering for better performance
   const filteredProjects = useDebouncedFilter(
     projects,
     {
       type: selectedFilter,
-      registry: selectedRegistry
+      registry: selectedRegistry,
     },
     filterFunctions,
     300 // 300ms debounce delay
-  )
+  );
 
   // Initialize R2 data source and fetch real data on component mount
   useEffect(() => {
     const fetchRealData = async () => {
-      setIsLoading(true)
-      setDataLoaded(false)
-      
+      setIsLoading(true);
+      setDataLoaded(false);
+
       try {
-        // Initialize with your BlockEdge R2 URL
-        initializeProjectData('https://asset.blockedge.co/blockedge-co2e-project.json')
-        
-        const [transactions, blocks, stats, projectsData, projectStatsData] = await Promise.all([
-          co2eApi.getMainPageTransactions(),
-          co2eApi.getMainPageBlocks(),
-          co2eApi.getStats(),
-          co2eApi.getProjects(),
-          co2eApi.getProjectStats()
-        ])
-        
+        // For development, we use the local API proxy to avoid CORS issues
+        // The proxy will fetch from the BlockEdge URL server-side
+        const [transactions, blocks, stats, projectsData, projectStatsData] =
+          await Promise.all([
+            co2eApi.getMainPageTransactions(),
+            co2eApi.getMainPageBlocks(),
+            co2eApi.getStats(),
+            co2eApi.getProjects(),
+            co2eApi.getProjectStats(),
+          ]);
+
         // Only update if we have valid data (not empty or zero values)
         if (projectsData && projectsData.length > 0) {
-          setProjects(projectsData)
-          setProjectStats(projectStatsData)
-          setDataLoaded(true)
-          
+          setProjects(projectsData);
+          setProjectStats(projectStatsData);
+          setDataLoaded(true);
+
           // Update with real data if available
-          setRealData(prev => ({
+          setRealData((prev) => ({
             ...prev,
             recentTransactions: transactions.slice(0, 6).map((tx, index) => ({
-              id: `TX${(index + 1).toString().padStart(3, '0')}`,
+              id: `TX${(index + 1).toString().padStart(3, "0")}`,
               type: tx.method || "Contract Call",
               hash: tx.hash,
               amount: `${tx.value || "0"} CO2E`,
@@ -243,17 +328,20 @@ export function CarbonDashboard() {
               timestamp: tx.timestamp || "Recently",
               status: tx.status || "Success",
             })),
-            recentBlocks: blocks.slice(0, 5).map(block => ({
+            recentBlocks: blocks.slice(0, 5).map((block) => ({
               number: block.number,
               timestamp: block.timestamp,
               transactions: block.transaction_count,
               gasUsed: block.gas_used,
-              gasLimit: block.gas_limit
+              gasLimit: block.gas_limit,
             })),
             heroMetrics: [
               {
                 title: "Total Projects",
-                value: projectStatsData.total > 0 ? projectStatsData.total.toString() : "—",
+                value:
+                  projectStatsData.total > 0
+                    ? projectStatsData.total.toString()
+                    : "—",
                 change: "+8.7%",
                 trend: "up" as const,
                 icon: Leaf,
@@ -261,8 +349,12 @@ export function CarbonDashboard() {
                 color: "from-teal-500 to-cyan-600",
               },
               {
-                title: "CO2 Reduction", 
-                value: projectStatsData.totalCO2Reduction && projectStatsData.totalCO2Reduction !== "0" ? `${projectStatsData.totalCO2Reduction} tons` : "—",
+                title: "CO2 Reduction",
+                value:
+                  projectStatsData.totalCO2Reduction &&
+                  projectStatsData.totalCO2Reduction !== "0"
+                    ? `${projectStatsData.totalCO2Reduction} tons`
+                    : "—",
                 change: "+23",
                 trend: "up" as const,
                 icon: Award,
@@ -271,7 +363,10 @@ export function CarbonDashboard() {
               },
               {
                 title: "Total Blocks",
-                value: stats.total_blocks && stats.total_blocks !== "0" ? stats.total_blocks : realData.heroMetrics[2].value,
+                value:
+                  stats.total_blocks && stats.total_blocks !== "0"
+                    ? stats.total_blocks
+                    : realData.heroMetrics[2].value,
                 change: "+5.2%",
                 trend: "up" as const,
                 icon: Building2,
@@ -280,68 +375,73 @@ export function CarbonDashboard() {
               },
               {
                 title: "Average Rating",
-                value: projectStatsData.averageRating > 0 ? projectStatsData.averageRating.toFixed(1) : "—",
+                value:
+                  projectStatsData.averageRating > 0
+                    ? projectStatsData.averageRating.toFixed(1)
+                    : "—",
                 change: "+0.1",
                 trend: "up" as const,
                 icon: DollarSign,
                 pulse: true,
                 color: "from-emerald-500 to-teal-600",
-              }
-            ]
-          }))
+              },
+            ],
+          }));
         }
       } catch (error) {
-        console.error('Error fetching real data:', error)
+        console.error("Error fetching real data:", error);
         // Keep loading state if there's an error
-        setDataLoaded(false)
+        setDataLoaded(false);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchRealData()
-  }, [])
+    fetchRealData();
+  }, []);
 
   // Animate metrics on load (optimized for performance)
   useEffect(() => {
     if (shouldReduceAnimations) {
       // Instantly set to 100% if animations are disabled
-      setAnimatedMetrics(realData.heroMetrics.map(() => 100))
-      return
+      setAnimatedMetrics(realData.heroMetrics.map(() => 100));
+      return;
     }
 
     const interval = setInterval(() => {
       setAnimatedMetrics((prev) => {
-        const newValues = [...prev]
-        let allComplete = true
-        
+        const newValues = [...prev];
+        let allComplete = true;
+
         realData.heroMetrics.forEach((_, index) => {
           if (newValues[index] < 100) {
-            newValues[index] += 10 // Faster increment for better performance
-            if (newValues[index] > 100) newValues[index] = 100
-            allComplete = false
+            newValues[index] += 10; // Faster increment for better performance
+            if (newValues[index] > 100) newValues[index] = 100;
+            allComplete = false;
           }
-        })
-        
+        });
+
         // Stop interval when all animations are complete
         if (allComplete) {
-          clearInterval(interval)
+          clearInterval(interval);
         }
-        
-        return newValues
-      })
-    }, 100) // Slower interval for better performance
 
-    return () => clearInterval(interval)
-  }, [realData.heroMetrics, shouldReduceAnimations])
+        return newValues;
+      });
+    }, 100); // Slower interval for better performance
+
+    return () => clearInterval(interval);
+  }, [realData.heroMetrics, shouldReduceAnimations]);
 
   // Simulate real-time data updates with CO2e chain data (optimized)
-  const [marketDataState, setMarketDataState] = useState(co2eApi.generateMarketData())
-  
+  const [marketDataState, setMarketDataState] = useState(
+    co2eApi.generateMarketData()
+  );
+
   useEffect(() => {
     if (shouldReduceAnimations) {
       // Skip real-time updates on slower devices
-      return
+      return;
     }
 
     const interval = setInterval(() => {
@@ -350,49 +450,52 @@ export function CarbonDashboard() {
           ...item,
           price: item.price * (1 + (Math.random() * 0.02 - 0.01)),
           volume: item.volume * (1 + (Math.random() * 0.03 - 0.015)),
-        }))
-      })
-    }, 5000) // Slower updates for better performance
+        }));
+      });
+    }, 5000); // Slower updates for better performance
 
-    return () => clearInterval(interval)
-  }, [shouldReduceAnimations])
+    return () => clearInterval(interval);
+  }, [shouldReduceAnimations]);
 
   // 3D card effect refs
-  const card1Ref = useRef(null)
-  const card2Ref = useRef(null)
-  const card3Ref = useRef(null)
-  const card4Ref = useRef(null)
-
+  const card1Ref = useRef(null);
+  const card2Ref = useRef(null);
+  const card3Ref = useRef(null);
+  const card4Ref = useRef(null);
 
   // Memoized handlers for better performance
   const handleViewProjectDetails = useCallback((project: any) => {
-    setSelectedProject(project)
-    setShowProjectDetails(true)
-  }, [])
+    setSelectedProject(project);
+    setShowProjectDetails(true);
+  }, []);
 
   const handleMouseMove = useCallback((e: any, ref: any) => {
-    if (!ref.current) return
-    const card = ref.current
-    const rect = card.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const rotateX = (y - centerY) / 10
-    const rotateY = (centerX - x) / 10
+    if (!ref.current) return;
+    const card = ref.current;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = (y - centerY) / 10;
+    const rotateY = (centerX - x) / 10;
 
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`
-  }, [])
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+  }, []);
 
   const handleMouseLeave = useCallback((ref: any) => {
-    if (!ref.current) return
-    ref.current.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`
-  }, [])
+    if (!ref.current) return;
+    ref.current.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+  }, []);
 
   return (
     <div className="container mx-auto p-6 space-y-8">
       {/* Hero Metrics */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
           CO2e Chain Dashboard
         </h1>
@@ -401,8 +504,17 @@ export function CarbonDashboard() {
             <motion.div
               key={index}
               ref={[card1Ref, card2Ref, card3Ref, card4Ref][index]}
-              onMouseMove={(e) => handleMouseMove(e, [card1Ref, card2Ref, card3Ref, card4Ref][index])}
-              onMouseLeave={() => handleMouseLeave([card1Ref, card2Ref, card3Ref, card4Ref][index])}
+              onMouseMove={(e) =>
+                handleMouseMove(
+                  e,
+                  [card1Ref, card2Ref, card3Ref, card4Ref][index]
+                )
+              }
+              onMouseLeave={() =>
+                handleMouseLeave(
+                  [card1Ref, card2Ref, card3Ref, card4Ref][index]
+                )
+              }
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -413,7 +525,9 @@ export function CarbonDashboard() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-slate-400">{metric.title}</p>
+                      <p className="text-sm font-medium text-slate-400">
+                        {metric.title}
+                      </p>
                       <div className="h-8 flex items-end">
                         {isLoading || !dataLoaded ? (
                           <LoadingText text="Loading..." />
@@ -421,10 +535,15 @@ export function CarbonDashboard() {
                           <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+                            transition={{
+                              duration: 0.5,
+                              delay: 0.2 + index * 0.1,
+                            }}
                             className="text-3xl font-bold text-white"
                           >
-                            {animatedMetrics[index] === 100 ? metric.value : "—"}
+                            {animatedMetrics[index] === 100
+                              ? metric.value
+                              : "—"}
                           </motion.p>
                         )}
                       </div>
@@ -433,7 +552,10 @@ export function CarbonDashboard() {
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            transition={{ delay: 0.5 + index * 0.1, type: "spring" }}
+                            transition={{
+                              delay: 0.5 + index * 0.1,
+                              type: "spring",
+                            }}
                           >
                             <ArrowUpRight className="w-4 h-4 text-emerald-400" />
                           </motion.div>
@@ -442,7 +564,9 @@ export function CarbonDashboard() {
                         )}
                         <span
                           className={`text-sm font-medium ${
-                            metric.trend === "up" ? "text-emerald-400" : "text-red-400"
+                            metric.trend === "up"
+                              ? "text-emerald-400"
+                              : "text-red-400"
                           }`}
                         >
                           {metric.change}
@@ -498,11 +622,16 @@ export function CarbonDashboard() {
                   CO2e Chain Analytics
                 </CardTitle>
                 <CardDescription className="text-slate-400">
-                  Real-time blockchain metrics and transaction analysis for CO2e Chain network
+                  Real-time blockchain metrics and transaction analysis for CO2e
+                  Chain network
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-700/50">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
+                >
                   <Download className="w-4 h-4 mr-1" />
                   Export
                 </Button>
@@ -536,9 +665,23 @@ export function CarbonDashboard() {
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={marketDataState}>
                         <defs>
-                          <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                          <linearGradient
+                            id="colorPrice"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#10b981"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#10b981"
+                              stopOpacity={0}
+                            />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -562,12 +705,17 @@ export function CarbonDashboard() {
                 <Card className="bg-slate-800/80 border-slate-700/50">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-400">Gas Price</span>
+                      <span className="text-sm font-medium text-slate-400">
+                        Gas Price
+                      </span>
                       <motion.span
                         animate={{
                           color: ["#10b981", "#34d399", "#10b981"],
                         }}
-                        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        transition={{
+                          duration: 2,
+                          repeat: Number.POSITIVE_INFINITY,
+                        }}
                         className="text-lg font-bold text-emerald-500"
                       >
                         {realData.networkStats.gasPrice}
@@ -575,7 +723,9 @@ export function CarbonDashboard() {
                     </div>
                     <div className="flex items-center gap-1 mt-1">
                       <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                      <span className="text-xs text-emerald-400">+15.5% (24h)</span>
+                      <span className="text-xs text-emerald-400">
+                        +15.5% (24h)
+                      </span>
                     </div>
                     <div className="mt-2">
                       <div className="h-10">
@@ -598,8 +748,12 @@ export function CarbonDashboard() {
                 <Card className="bg-slate-800/80 border-slate-700/50">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-400">Network Utilization</span>
-                      <span className="text-lg font-bold text-emerald-500">{realData.networkStats.networkUtilization}</span>
+                      <span className="text-sm font-medium text-slate-400">
+                        Network Utilization
+                      </span>
+                      <span className="text-lg font-bold text-emerald-500">
+                        {realData.networkStats.networkUtilization}
+                      </span>
                     </div>
                     <div className="mt-2 relative">
                       <div className="h-2 w-full bg-slate-700 rounded-full overflow-hidden">
@@ -621,8 +775,12 @@ export function CarbonDashboard() {
                 <Card className="bg-slate-800/80 border-slate-700/50">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-400">Daily Transactions</span>
-                      <span className="text-lg font-bold text-white">{realData.networkStats.dailyTransactions}</span>
+                      <span className="text-sm font-medium text-slate-400">
+                        Daily Transactions
+                      </span>
+                      <span className="text-lg font-bold text-white">
+                        {realData.networkStats.dailyTransactions}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1 mt-1">
                       <ArrowUpRight className="w-3 h-3 text-emerald-400" />
@@ -633,9 +791,23 @@ export function CarbonDashboard() {
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={marketDataState.slice(-5)}>
                             <defs>
-                              <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#0d9488" stopOpacity={0.8} />
-                                <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                              <linearGradient
+                                id="colorVolume"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="#0d9488"
+                                  stopOpacity={0.8}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="#0d9488"
+                                  stopOpacity={0}
+                                />
                               </linearGradient>
                             </defs>
                             <Area
@@ -665,7 +837,11 @@ export function CarbonDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl blur-xl" />
             <TabsList className="grid w-full grid-cols-4 bg-slate-800/70 backdrop-blur-md border border-white/5 rounded-xl p-1">
@@ -698,7 +874,9 @@ export function CarbonDashboard() {
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
               >
                 <Shield className="w-4 h-4" />
-                <span className="hidden sm:inline">Compliance & Governance</span>
+                <span className="hidden sm:inline">
+                  Compliance & Governance
+                </span>
                 <span className="sm:hidden">Compliance</span>
               </TabsTrigger>
             </TabsList>
@@ -715,22 +893,35 @@ export function CarbonDashboard() {
                       Project Command Center
                     </CardTitle>
                     <CardDescription className="text-slate-400">
-                      Enterprise project management with AI-powered recommendations
+                      Enterprise project management with AI-powered
+                      recommendations
                     </CardDescription>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                    <Select
+                      value={selectedFilter}
+                      onValueChange={setSelectedFilter}
+                    >
                       <SelectTrigger className="w-48 bg-slate-900/80 border-slate-700 text-slate-300">
                         <SelectValue placeholder="Filter projects" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-700 text-slate-300">
                         <SelectItem value="all">All Projects</SelectItem>
-                        <SelectItem value="renewable">Renewable Energy</SelectItem>
-                        <SelectItem value="forest">Forest Conservation</SelectItem>
-                        <SelectItem value="industrial">Industrial Efficiency</SelectItem>
+                        <SelectItem value="renewable">
+                          Renewable Energy
+                        </SelectItem>
+                        <SelectItem value="forest">
+                          Forest Conservation
+                        </SelectItem>
+                        <SelectItem value="industrial">
+                          Industrial Efficiency
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select value={selectedRegistry} onValueChange={setSelectedRegistry}>
+                    <Select
+                      value={selectedRegistry}
+                      onValueChange={setSelectedRegistry}
+                    >
                       <SelectTrigger className="w-48 bg-slate-900/80 border-slate-700 text-slate-300">
                         <SelectValue placeholder="Filter by registry" />
                       </SelectTrigger>
@@ -763,7 +954,10 @@ export function CarbonDashboard() {
                 {isLoading || (!dataLoaded && projects.length === 0) ? (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map((index) => (
-                      <Card key={index} className="bg-slate-800/80 border-slate-700/50">
+                      <Card
+                        key={index}
+                        className="bg-slate-800/80 border-slate-700/50"
+                      >
                         <CardHeader className="pb-2">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 space-y-2">
@@ -792,7 +986,10 @@ export function CarbonDashboard() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {(filteredProjects.length > 0 ? filteredProjects.slice(0, 6) : projects.length > 0 ? projects.slice(0, 6) : realData.projects || []).map((project, index) => (
+                    {(filteredProjects.length > 0
+                      ? filteredProjects.slice(0, 6)
+                      : projects.slice(0, 6)
+                    ).map((project, index) => (
                       <ProjectCard
                         key={project.id}
                         project={project}
@@ -815,7 +1012,9 @@ export function CarbonDashboard() {
                     <TrendingUp className="w-5 h-5 text-emerald-400" />
                     Predictive Carbon Pricing
                   </CardTitle>
-                  <CardDescription className="text-slate-400">ML-driven forecasting models</CardDescription>
+                  <CardDescription className="text-slate-400">
+                    ML-driven forecasting models
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="h-64">
@@ -835,16 +1034,47 @@ export function CarbonDashboard() {
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={marketDataState}>
                           <defs>
-                            <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                            <linearGradient
+                              id="colorPredicted"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#10b981"
+                                stopOpacity={0.8}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#10b981"
+                                stopOpacity={0}
+                              />
                             </linearGradient>
-                            <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                            <linearGradient
+                              id="colorActual"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#0ea5e9"
+                                stopOpacity={0.8}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#0ea5e9"
+                                stopOpacity={0}
+                              />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#334155"
+                          />
                           <XAxis dataKey="month" stroke="#94a3b8" />
                           <YAxis stroke="#94a3b8" />
                           <ChartTooltip content={<ChartTooltipContent />} />
@@ -905,13 +1135,19 @@ export function CarbonDashboard() {
                           className="w-2 h-2 bg-emerald-400 rounded-full"
                         />
                         <div>
-                          <div className="font-medium text-white">Large Accumulation</div>
-                          <div className="text-sm text-emerald-300">+$15M in carbon credits</div>
+                          <div className="font-medium text-white">
+                            Large Accumulation
+                          </div>
+                          <div className="text-sm text-emerald-300">
+                            +$15M in carbon credits
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-medium text-white">BlackRock</div>
-                        <div className="text-xs text-slate-400">10 minutes ago</div>
+                        <div className="text-xs text-slate-400">
+                          10 minutes ago
+                        </div>
                       </div>
                     </motion.div>
                     <motion.div
@@ -934,13 +1170,19 @@ export function CarbonDashboard() {
                           className="w-2 h-2 bg-orange-400 rounded-full"
                         />
                         <div>
-                          <div className="font-medium text-white">Distribution</div>
-                          <div className="text-sm text-orange-300">-$8M in carbon credits</div>
+                          <div className="font-medium text-white">
+                            Distribution
+                          </div>
+                          <div className="text-sm text-orange-300">
+                            -$8M in carbon credits
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-medium text-white">Vanguard</div>
-                        <div className="text-xs text-slate-400">25 minutes ago</div>
+                        <div className="text-xs text-slate-400">
+                          25 minutes ago
+                        </div>
                       </div>
                     </motion.div>
                     <motion.div
@@ -963,13 +1205,21 @@ export function CarbonDashboard() {
                           className="w-2 h-2 bg-emerald-400 rounded-full"
                         />
                         <div>
-                          <div className="font-medium text-white">New Position</div>
-                          <div className="text-sm text-emerald-300">+$12M in carbon credits</div>
+                          <div className="font-medium text-white">
+                            New Position
+                          </div>
+                          <div className="text-sm text-emerald-300">
+                            +$12M in carbon credits
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium text-white">State Street</div>
-                        <div className="text-xs text-slate-400">42 minutes ago</div>
+                        <div className="font-medium text-white">
+                          State Street
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          42 minutes ago
+                        </div>
                       </div>
                     </motion.div>
                   </div>
@@ -1021,7 +1271,9 @@ export function CarbonDashboard() {
                             strokeLinecap="round"
                             strokeDasharray="282.7"
                             initial={{ strokeDashoffset: 282.7 }}
-                            animate={{ strokeDashoffset: 282.7 * (1 - 94.2 / 100) }}
+                            animate={{
+                              strokeDashoffset: 282.7 * (1 - 94.2 / 100),
+                            }}
                             transition={{ duration: 1.5, delay: 0.5 }}
                           />
                         </svg>
@@ -1031,8 +1283,12 @@ export function CarbonDashboard() {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.5, delay: 1 }}
                           >
-                            <div className="text-3xl font-bold text-emerald-400">94.2</div>
-                            <div className="text-xs text-slate-400">ESG Score</div>
+                            <div className="text-3xl font-bold text-emerald-400">
+                              94.2
+                            </div>
+                            <div className="text-xs text-slate-400">
+                              ESG Score
+                            </div>
                           </motion.div>
                         </div>
                       </div>
@@ -1048,16 +1304,36 @@ export function CarbonDashboard() {
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className="bg-slate-800/80 border border-slate-700/50 rounded-lg p-6 text-center"
                   >
-                    <div className="text-3xl font-bold text-emerald-400">8.7M</div>
-                    <div className="text-sm text-slate-400 mt-1">Tons CO2 Reduced</div>
-                    <div className="text-xs text-emerald-400 mt-1">+12% this quarter</div>
+                    <div className="text-3xl font-bold text-emerald-400">
+                      8.7M
+                    </div>
+                    <div className="text-sm text-slate-400 mt-1">
+                      Tons CO2 Reduced
+                    </div>
+                    <div className="text-xs text-emerald-400 mt-1">
+                      +12% this quarter
+                    </div>
                     <div className="mt-4 h-16">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={marketDataState}>
                           <defs>
-                            <linearGradient id="colorImpact" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                            <linearGradient
+                              id="colorImpact"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#10b981"
+                                stopOpacity={0.8}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#10b981"
+                                stopOpacity={0}
+                              />
                             </linearGradient>
                           </defs>
                           <Area
@@ -1078,9 +1354,15 @@ export function CarbonDashboard() {
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="bg-slate-800/80 border border-slate-700/50 rounded-lg p-6 text-center"
                   >
-                    <div className="text-3xl font-bold text-emerald-400">156</div>
-                    <div className="text-sm text-slate-400 mt-1">SDG Alignment</div>
-                    <div className="text-xs text-emerald-400 mt-1">15 of 17 goals</div>
+                    <div className="text-3xl font-bold text-emerald-400">
+                      156
+                    </div>
+                    <div className="text-sm text-slate-400 mt-1">
+                      SDG Alignment
+                    </div>
+                    <div className="text-xs text-emerald-400 mt-1">
+                      15 of 17 goals
+                    </div>
                     <div className="mt-4 flex flex-wrap justify-center gap-1">
                       {[1, 2, 3, 4, 5].map((i) => (
                         <motion.div
@@ -1143,19 +1425,32 @@ export function CarbonDashboard() {
                           <Building2 className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <div className="font-medium text-white">{tx.hash.substring(0, 10)}...{tx.hash.slice(-4)}</div>
+                          <div className="font-medium text-white">
+                            {tx.hash.substring(0, 10)}...{tx.hash.slice(-4)}
+                          </div>
                           <div className="text-sm text-slate-400">
-                            {tx.type} • {tx.from ? `${tx.from.substring(0, 6)}...${tx.from.slice(-4)}` : 'Unknown'}
+                            {tx.type} •{" "}
+                            {tx.from
+                              ? `${tx.from.substring(0, 6)}...${tx.from.slice(
+                                  -4
+                                )}`
+                              : "Unknown"}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium text-white">{tx.amount}</div>
-                        <div className="text-sm text-slate-400">{tx.timestamp}</div>
+                        <div className="font-medium text-white">
+                          {tx.amount}
+                        </div>
+                        <div className="text-sm text-slate-400">
+                          {tx.timestamp}
+                        </div>
                       </div>
                       <div className="text-right">
                         <Badge
-                          variant={tx.status === "Success" ? "default" : "secondary"}
+                          variant={
+                            tx.status === "Success" ? "default" : "secondary"
+                          }
                           className={
                             tx.status === "Success"
                               ? "bg-emerald-900/50 text-emerald-400 border-emerald-500/30"
@@ -1185,7 +1480,9 @@ export function CarbonDashboard() {
                     <Zap className="w-5 h-5 text-emerald-400" />
                     Whale Alert System
                   </CardTitle>
-                  <CardDescription className="text-slate-400">Large institutional movements</CardDescription>
+                  <CardDescription className="text-slate-400">
+                    Large institutional movements
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-3">
@@ -1208,8 +1505,12 @@ export function CarbonDashboard() {
                         className="w-2 h-2 bg-red-400 rounded-full"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-white">Large Sale Alert</div>
-                        <div className="text-sm text-red-300">JPMorgan sold 500K tokens ($23M)</div>
+                        <div className="font-medium text-white">
+                          Large Sale Alert
+                        </div>
+                        <div className="text-sm text-red-300">
+                          JPMorgan sold 500K tokens ($23M)
+                        </div>
                       </div>
                       <span className="text-xs text-slate-500">5m ago</span>
                     </motion.div>
@@ -1232,8 +1533,12 @@ export function CarbonDashboard() {
                         className="w-2 h-2 bg-emerald-400 rounded-full"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-white">Large Purchase Alert</div>
-                        <div className="text-sm text-emerald-300">Microsoft bought 750K tokens ($35M)</div>
+                        <div className="font-medium text-white">
+                          Large Purchase Alert
+                        </div>
+                        <div className="text-sm text-emerald-300">
+                          Microsoft bought 750K tokens ($35M)
+                        </div>
                       </div>
                       <span className="text-xs text-slate-500">12m ago</span>
                     </motion.div>
@@ -1247,14 +1552,28 @@ export function CarbonDashboard() {
                     <Activity className="w-5 h-5 text-emerald-400" />
                     Cross-Chain Activity
                   </CardTitle>
-                  <CardDescription className="text-slate-400">Multi-blockchain transaction monitoring</CardDescription>
+                  <CardDescription className="text-slate-400">
+                    Multi-blockchain transaction monitoring
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     {[
-                      { name: "Ethereum", value: 75, color: "from-blue-500 to-blue-600" },
-                      { name: "Polygon", value: 45, color: "from-purple-500 to-purple-600" },
-                      { name: "Binance Smart Chain", value: 30, color: "from-yellow-500 to-yellow-600" },
+                      {
+                        name: "Ethereum",
+                        value: 75,
+                        color: "from-blue-500 to-blue-600",
+                      },
+                      {
+                        name: "Polygon",
+                        value: 45,
+                        color: "from-purple-500 to-purple-600",
+                      },
+                      {
+                        name: "Binance Smart Chain",
+                        value: 30,
+                        color: "from-yellow-500 to-yellow-600",
+                      },
                     ].map((chain, index) => (
                       <motion.div
                         key={chain.name}
@@ -1264,19 +1583,28 @@ export function CarbonDashboard() {
                         className="flex items-center justify-between"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${chain.color}`} />
-                          <span className="text-sm text-slate-300">{chain.name}</span>
+                          <div
+                            className={`w-3 h-3 rounded-full bg-gradient-to-r ${chain.color}`}
+                          />
+                          <span className="text-sm text-slate-300">
+                            {chain.name}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-2 bg-slate-700 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${chain.value}%` }}
-                              transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
+                              transition={{
+                                duration: 1,
+                                delay: 0.5 + index * 0.1,
+                              }}
                               className={`h-full bg-gradient-to-r ${chain.color}`}
                             />
                           </div>
-                          <span className="text-sm font-medium text-white w-8">{chain.value}%</span>
+                          <span className="text-sm font-medium text-white w-8">
+                            {chain.value}%
+                          </span>
                         </div>
                       </motion.div>
                     ))}
@@ -1310,9 +1638,15 @@ export function CarbonDashboard() {
                       <Card className="bg-slate-800/80 border-slate-700/50">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
-                            <span className="font-medium text-white">{item.jurisdiction}</span>
+                            <span className="font-medium text-white">
+                              {item.jurisdiction}
+                            </span>
                             <Badge
-                              variant={item.status === "Compliant" ? "default" : "secondary"}
+                              variant={
+                                item.status === "Compliant"
+                                  ? "default"
+                                  : "secondary"
+                              }
                               className={
                                 item.status === "Compliant"
                                   ? "bg-emerald-900/50 text-emerald-400 border-emerald-500/30"
@@ -1324,29 +1658,42 @@ export function CarbonDashboard() {
                           </div>
                           <div className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-slate-400">Compliance Score</span>
-                              <span className="font-medium text-white">{item.score}%</span>
+                              <span className="text-slate-400">
+                                Compliance Score
+                              </span>
+                              <span className="font-medium text-white">
+                                {item.score}%
+                              </span>
                             </div>
                             <div className="relative">
                               <div className="h-2 w-full bg-slate-700 rounded-full overflow-hidden">
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{ width: `${item.score}%` }}
-                                  transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
+                                  transition={{
+                                    duration: 1,
+                                    delay: 0.5 + index * 0.1,
+                                  }}
                                   className={`h-full ${
                                     item.score >= 95
                                       ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                                       : item.score >= 90
-                                        ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                                        : "bg-gradient-to-r from-red-500 to-red-600"
+                                      ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                                      : "bg-gradient-to-r from-red-500 to-red-600"
                                   }`}
                                 />
                               </div>
                             </div>
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-slate-400">Active Alerts</span>
+                              <span className="text-slate-400">
+                                Active Alerts
+                              </span>
                               <span
-                                className={`font-medium ${item.alerts > 0 ? "text-orange-400" : "text-emerald-400"}`}
+                                className={`font-medium ${
+                                  item.alerts > 0
+                                    ? "text-orange-400"
+                                    : "text-emerald-400"
+                                }`}
                               >
                                 {item.alerts}
                               </span>
@@ -1367,12 +1714,18 @@ export function CarbonDashboard() {
                     <Lock className="w-5 h-5 text-emerald-400" />
                     Automated Audit Trail
                   </CardTitle>
-                  <CardDescription className="text-slate-400">Enterprise-grade security and compliance</CardDescription>
+                  <CardDescription className="text-slate-400">
+                    Enterprise-grade security and compliance
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     {[
-                      { name: "SOC 2 Type II", status: "Certified", icon: Award },
+                      {
+                        name: "SOC 2 Type II",
+                        status: "Certified",
+                        icon: Award,
+                      },
                       { name: "ISO 27001", status: "Certified", icon: Shield },
                       { name: "GDPR Compliance", status: "Active", icon: Lock },
                     ].map((cert, index) => (
@@ -1388,11 +1741,17 @@ export function CarbonDashboard() {
                             <cert.icon className="w-4 h-4 text-emerald-400" />
                           </div>
                           <div>
-                            <div className="font-medium text-white">{cert.name}</div>
-                            <div className="text-sm text-slate-400">{cert.status}</div>
+                            <div className="font-medium text-white">
+                              {cert.name}
+                            </div>
+                            <div className="text-sm text-slate-400">
+                              {cert.status}
+                            </div>
                           </div>
                         </div>
-                        <Badge className="bg-emerald-900/50 text-emerald-400 border-emerald-500/30">Active</Badge>
+                        <Badge className="bg-emerald-900/50 text-emerald-400 border-emerald-500/30">
+                          Active
+                        </Badge>
                       </motion.div>
                     ))}
                   </div>
@@ -1405,14 +1764,28 @@ export function CarbonDashboard() {
                     <RefreshCw className="w-5 h-5 text-emerald-400" />
                     Third-Party Verification
                   </CardTitle>
-                  <CardDescription className="text-slate-400">Big 4 accounting firm integration</CardDescription>
+                  <CardDescription className="text-slate-400">
+                    Big 4 accounting firm integration
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     {[
-                      { name: "PwC Carbon Audit", period: "Q4 2024 Review", status: "Passed" },
-                      { name: "KPMG ESG Verification", period: "Annual Assessment", status: "In Progress" },
-                      { name: "Deloitte Risk Assessment", period: "Quarterly Review", status: "Scheduled" },
+                      {
+                        name: "PwC Carbon Audit",
+                        period: "Q4 2024 Review",
+                        status: "Passed",
+                      },
+                      {
+                        name: "KPMG ESG Verification",
+                        period: "Annual Assessment",
+                        status: "In Progress",
+                      },
+                      {
+                        name: "Deloitte Risk Assessment",
+                        period: "Quarterly Review",
+                        status: "Scheduled",
+                      },
                     ].map((audit, index) => (
                       <motion.div
                         key={audit.name}
@@ -1422,16 +1795,20 @@ export function CarbonDashboard() {
                         className="flex items-center justify-between p-3 bg-slate-800/80 border border-slate-700/50 rounded-lg"
                       >
                         <div>
-                          <div className="font-medium text-white">{audit.name}</div>
-                          <div className="text-sm text-slate-400">{audit.period}</div>
+                          <div className="font-medium text-white">
+                            {audit.name}
+                          </div>
+                          <div className="text-sm text-slate-400">
+                            {audit.period}
+                          </div>
                         </div>
                         <Badge
                           className={
                             audit.status === "Passed"
                               ? "bg-emerald-900/50 text-emerald-400 border-emerald-500/30"
                               : audit.status === "In Progress"
-                                ? "bg-orange-900/50 text-orange-400 border-orange-500/30"
-                                : "bg-slate-700/50 text-slate-400 border-slate-600/30"
+                              ? "bg-orange-900/50 text-orange-400 border-orange-500/30"
+                              : "bg-slate-700/50 text-slate-400 border-slate-600/30"
                           }
                         >
                           {audit.status}
@@ -1458,15 +1835,23 @@ export function CarbonDashboard() {
             {/* Header */}
             <div className="p-6 border-b border-slate-700 flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{selectedProject.name}</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {selectedProject.name}
+                </h2>
                 <div className="flex items-center gap-2 mb-2">
                   <Badge className="bg-emerald-900/50 text-emerald-400 border-emerald-500/30">
                     {selectedProject.rating || "AA+"}
                   </Badge>
-                  <Badge variant="outline" className="text-slate-300 border-slate-600">
+                  <Badge
+                    variant="outline"
+                    className="text-slate-300 border-slate-600"
+                  >
                     {selectedProject.methodology || "IREC"}
                   </Badge>
-                  <Badge variant="outline" className="text-slate-300 border-slate-600">
+                  <Badge
+                    variant="outline"
+                    className="text-slate-300 border-slate-600"
+                  >
                     {selectedProject.status || "Active"}
                   </Badge>
                 </div>
@@ -1487,7 +1872,9 @@ export function CarbonDashboard() {
               {/* Project Location */}
               <div className="flex items-center gap-2 p-4 bg-slate-700/50 rounded-lg">
                 <MapPin className="w-4 h-4 text-emerald-400" />
-                <span className="text-slate-300">{selectedProject.location}</span>
+                <span className="text-slate-300">
+                  {selectedProject.location}
+                </span>
               </div>
 
               {/* Key Metrics */}
@@ -1495,21 +1882,26 @@ export function CarbonDashboard() {
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Current Supply</div>
                   <div className="text-xl font-bold text-white">
-                    {selectedProject.currentSupply || selectedProject.tokens || "N/A"}
+                    {selectedProject.currentSupply ||
+                      selectedProject.tokens ||
+                      "N/A"}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">CO2 Reduction</div>
                   <div className="text-xl font-bold text-emerald-400">
-                    {selectedProject.co2Reduction?.total ? 
-                      `${parseInt(selectedProject.co2Reduction.total).toLocaleString()} tons` : 
-                      selectedProject.impact || "2M tons"
-                    }
+                    {selectedProject.co2Reduction?.total
+                      ? `${parseInt(
+                          selectedProject.co2Reduction.total
+                        ).toLocaleString()} tons`
+                      : selectedProject.impact || "2M tons"}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Vintage Year</div>
-                  <div className="text-xl font-bold text-white">{selectedProject.vintage || "2024"}</div>
+                  <div className="text-xl font-bold text-white">
+                    {selectedProject.vintage || "2024"}
+                  </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Current Price</div>
@@ -1522,44 +1914,71 @@ export function CarbonDashboard() {
               {/* Project Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-white">Project Information</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    Project Information
+                  </h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-slate-400">Project Type</span>
+                      <span className="text-sm text-slate-400">
+                        Project Type
+                      </span>
                       <p className="text-white">{selectedProject.type}</p>
                     </div>
                     <div>
                       <span className="text-sm text-slate-400">Country</span>
-                      <p className="text-white">{selectedProject.country || "International"}</p>
+                      <p className="text-white">
+                        {selectedProject.country || "International"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-sm text-slate-400">Registry</span>
-                      <p className="text-white">{selectedProject.registry || "Verified Registry"}</p>
+                      <p className="text-white">
+                        {selectedProject.registry || "Verified Registry"}
+                      </p>
                     </div>
                     <div>
-                      <span className="text-sm text-slate-400">Certification Body</span>
-                      <p className="text-white">{selectedProject.certificationBody || "Verified Registry"}</p>
+                      <span className="text-sm text-slate-400">
+                        Certification Body
+                      </span>
+                      <p className="text-white">
+                        {selectedProject.certificationBody ||
+                          "Verified Registry"}
+                      </p>
                     </div>
                     <div>
-                      <span className="text-sm text-slate-400">Project Developer</span>
-                      <p className="text-white">{selectedProject.projectDeveloper || "Project Developer"}</p>
+                      <span className="text-sm text-slate-400">
+                        Project Developer
+                      </span>
+                      <p className="text-white">
+                        {selectedProject.projectDeveloper ||
+                          "Project Developer"}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-white">Blockchain Details</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    Blockchain Details
+                  </h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-slate-400">Token Address</span>
+                      <span className="text-sm text-slate-400">
+                        Token Address
+                      </span>
                       <div className="flex items-center gap-2">
                         <code className="text-sm bg-slate-700 px-2 py-1 rounded text-emerald-400">
-                          {selectedProject.tokenAddress?.slice(0, 10)}...{selectedProject.tokenAddress?.slice(-6)}
+                          {selectedProject.tokenAddress?.slice(0, 10)}...
+                          {selectedProject.tokenAddress?.slice(-6)}
                         </code>
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => navigator.clipboard.writeText(selectedProject.tokenAddress)}
+                          onClick={() =>
+                            navigator.clipboard.writeText(
+                              selectedProject.tokenAddress
+                            )
+                          }
                           className="h-6 w-6 p-0"
                         >
                           <Copy className="w-3 h-3" />
@@ -1567,16 +1986,24 @@ export function CarbonDashboard() {
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm text-slate-400">Total Supply</span>
-                      <p className="text-white">{selectedProject.totalSupply || "1,000,000"}</p>
+                      <span className="text-sm text-slate-400">
+                        Total Supply
+                      </span>
+                      <p className="text-white">
+                        {selectedProject.totalSupply || "1,000,000"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-sm text-slate-400">Holders</span>
-                      <p className="text-white">{selectedProject.holders || "156"}</p>
+                      <p className="text-white">
+                        {selectedProject.holders || "156"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-sm text-slate-400">Transfers</span>
-                      <p className="text-white">{selectedProject.transfers || "1,247"}</p>
+                      <p className="text-white">
+                        {selectedProject.transfers || "1,247"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1584,27 +2011,37 @@ export function CarbonDashboard() {
 
               {/* Compliance */}
               <div>
-                <h3 className="text-lg font-semibold text-white mb-3">Compliance Standards</h3>
+                <h3 className="text-lg font-semibold text-white mb-3">
+                  Compliance Standards
+                </h3>
                 <div className="flex flex-wrap gap-2">
-                  {(selectedProject.compliance || ["EU Taxonomy", "TCFD"]).map((standard: string) => (
-                    <Badge
-                      key={standard}
-                      variant="outline"
-                      className="bg-slate-700/50 text-slate-300 border-slate-600"
-                    >
-                      {standard}
-                    </Badge>
-                  ))}
+                  {(selectedProject.compliance || ["EU Taxonomy", "TCFD"]).map(
+                    (standard: string) => (
+                      <Badge
+                        key={standard}
+                        variant="outline"
+                        className="bg-slate-700/50 text-slate-300 border-slate-600"
+                      >
+                        {standard}
+                      </Badge>
+                    )
+                  )}
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700">
+                <Button
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  onClick={() => viewProjectOnBlockchain(selectedProject)}
+                >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View on CO2e Chain
                 </Button>
-                <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-700/50">
+                <Button
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Download Report
                 </Button>
@@ -1614,5 +2051,5 @@ export function CarbonDashboard() {
         </div>
       )}
     </div>
-  )
+  );
 }
