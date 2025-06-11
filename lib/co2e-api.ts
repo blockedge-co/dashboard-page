@@ -227,8 +227,8 @@ class Co2eApiService {
               registry: standard.registry,
               verificationDate: new Date().toISOString(),
               co2Reduction: {
-                annual: "500000",
-                total: "2000000",
+                annual: "25000",
+                total: "100000",
                 unit: "tons CO2e",
               },
               pricing: {
@@ -575,7 +575,12 @@ class Co2eApiService {
       byCountry,
       byStatus,
       byRegistry,
-      totalCO2Reduction: totalCO2.toLocaleString(),
+      totalCO2Reduction:
+        totalCO2 > 1000000
+          ? `${(totalCO2 / 1000000).toFixed(1)}M`
+          : totalCO2 > 1000
+          ? `${(totalCO2 / 1000).toFixed(1)}K`
+          : totalCO2.toLocaleString(),
       averageRating: ratingCount > 0 ? totalRatings / ratingCount : 0,
     };
   }
@@ -708,8 +713,8 @@ class Co2eApiService {
         registry: "TUV SUD",
         verificationDate: "2024-01-15",
         co2Reduction: {
-          annual: "2100000",
-          total: "8400000",
+          annual: "25000",
+          total: "100000",
           unit: "tons CO2e",
         },
         pricing: {

@@ -216,12 +216,17 @@ export function ProjectsPage() {
               title: "CO2 Impact",
               value: isLoading
                 ? "..."
-                : `${Math.round(
-                    projects.reduce(
+                : (() => {
+                    const totalCO2 = projects.reduce(
                       (sum, p) => sum + parseInt(p.co2Reduction?.total || "0"),
                       0
-                    ) / 1000000
-                  )}M tons`,
+                    );
+                    return totalCO2 > 1000000
+                      ? `${(totalCO2 / 1000000).toFixed(1)}M tons`
+                      : totalCO2 > 1000
+                      ? `${(totalCO2 / 1000).toFixed(0)}K tons`
+                      : `${totalCO2.toLocaleString()} tons`;
+                  })(),
               icon: TrendingUp,
               color: "from-cyan-500 to-sky-600",
             },
@@ -523,9 +528,18 @@ export function ProjectsPage() {
                         <span className="text-slate-500">Impact</span>
                         <p className="font-semibold text-white">
                           {project.co2Reduction?.total
-                            ? `${Math.round(
-                                parseInt(project.co2Reduction.total) / 1000000
-                              )}M tons CO2`
+                            ? (() => {
+                                const co2Value = parseInt(
+                                  project.co2Reduction.total
+                                );
+                                return co2Value > 1000000
+                                  ? `${(co2Value / 1000000).toFixed(
+                                      1
+                                    )}M tons CO2`
+                                  : co2Value > 1000
+                                  ? `${(co2Value / 1000).toFixed(0)}K tons CO2`
+                                  : `${co2Value.toLocaleString()} tons CO2`;
+                              })()
                             : project.impact || "N/A"}
                         </p>
                       </div>
