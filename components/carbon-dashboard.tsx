@@ -1844,12 +1844,7 @@ export function CarbonDashboard() {
                       : selectedProject.impact || " tCO2e"}
                   </div>
                 </div>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Vintage Year</div>
-                  <div className="text-xl font-bold text-white">
-                    {selectedProject.vintage || "2024"}
-                  </div>
-                </div>
+
               </div>
 
               {/* Project Details */}

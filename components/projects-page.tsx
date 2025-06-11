@@ -545,12 +545,7 @@ export function ProjectsPage() {
                           {project.registry || project.liquidity || "N/A"}
                         </p>
                       </div>
-                      <div>
-                        <span className="text-slate-500">Vintage</span>
-                        <p className="font-semibold text-white">
-                          {project.vintage || "2024"}
-                        </p>
-                      </div>
+
                     </div>
 
 
@@ -706,12 +701,7 @@ export function ProjectsPage() {
                     {selectedProject.co2Reduction.total}  {selectedProject.co2Reduction.unit}
                   </div>
                 </div>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Vintage Year</div>
-                  <div className="text-xl font-bold text-white">
-                    {selectedProject.vintage || "2024"}
-                  </div>
-                </div>
+
               </div>
 
               {/* Project Details */}
