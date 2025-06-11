@@ -21,7 +21,7 @@ NEXT_PUBLIC_PROJECTS_DATA_URL=https://asset.blockedge.co/blockedge-co2e-project.
 #### Optional
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=https://exp.co2e.cc/api
+NEXT_PUBLIC_API_BASE_URL=https://exp.co2e.cc/api/v2
 ```
 
 ### Configuration Changes Made

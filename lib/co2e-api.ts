@@ -1,7 +1,7 @@
 import { configManager, getConfig } from "./config";
 import { nftService, type NFTContractInfo } from "./nft-service";
 
-const BASE_URL = "https://exp.co2e.cc/api";
+const BASE_URL = "https://exp.co2e.cc/api/v2";
 
 export interface BlockData {
   number: number;

@@ -14,7 +14,7 @@
 
 - [x] **Environment Variables**:
   - `NEXT_PUBLIC_PROJECTS_DATA_URL=https://asset.blockedge.co/blockedge-co2e-project.json`
-  - `NEXT_PUBLIC_API_BASE_URL=https://exp.co2e.cc/api` (optional)
+  - `NEXT_PUBLIC_API_BASE_URL=https://exp.co2e.cc/api/v2` (optional)
 - [x] **Config Files**: `.env.example` and `.env.local` created
 - [x] **Documentation**: `PRODUCTION_SETUP.md` available
 
@@ -34,7 +34,7 @@
 export NEXT_PUBLIC_PROJECTS_DATA_URL=https://asset.blockedge.co/blockedge-co2e-project.json
 
 # Optional: Set API base URL
-export NEXT_PUBLIC_API_BASE_URL=https://exp.co2e.cc/api
+export NEXT_PUBLIC_API_BASE_URL=https://exp.co2e.cc/api/v2
 ```
 
 ### 2. Build Application

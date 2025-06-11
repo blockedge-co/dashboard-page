@@ -36,7 +36,7 @@ export const defaultConfig: AppConfig = {
     useLocalProxy: true, // Use local API proxy to avoid CORS issues in development
   },
   api: {
-    co2eChainBaseUrl: "https://exp.co2e.cc/api",
+    co2eChainBaseUrl: "https://exp.co2e.cc/api/v2",
     requestTimeout: 10000, // 10 seconds
     retryAttempts: 3,
   },
