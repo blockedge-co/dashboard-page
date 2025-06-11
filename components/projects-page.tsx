@@ -404,25 +404,10 @@ export function ProjectsPage() {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="renewable">Renewable Energy</SelectItem>
                   <SelectItem value="forest">Forest Conservation</SelectItem>
-                  <SelectItem value="blue">Blue Carbon</SelectItem>
-                  <SelectItem value="removal">Carbon Removal</SelectItem>
-                </SelectContent>
+                  <SelectItem value="blue">Hydropower Energy</SelectItem>
+                  </SelectContent>
               </Select>
-              <Select
-                value={selectedRegistry}
-                onValueChange={setSelectedRegistry}
-              >
-                <SelectTrigger className="w-full sm:w-48 bg-slate-900/80 border-slate-700 text-slate-300">
-                  <SelectValue placeholder="Registry" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-700 text-slate-300">
-                  <SelectItem value="all">All Registries</SelectItem>
-                  <SelectItem value="verra">Verra</SelectItem>
-                  <SelectItem value="tuv-sud">TUV SUD</SelectItem>
-                  <SelectItem value="dnv">DNV</SelectItem>
-                  <SelectItem value="irec">I-REC</SelectItem>
-                </SelectContent>
-              </Select>
+
 
               <Button
                 variant="outline"
@@ -964,18 +949,16 @@ export function ProjectsPage() {
                   onClick={() => viewTokenOnBlockchain(selectedProject)}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  View on Blockchain
+                  View on CO2e chain
                 </Button>
                 {nftMetadata?.metadata?.url && (
                   <Button
                     variant="outline"
                     className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
-                    onClick={() =>
-                      window.open(nftMetadata.metadata.url, "_blank")
-                    }
+                    onClick={() => viewCertOnBlockchain(selectedProject)}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    View Registry
+                    View Project on CO2e chain
                   </Button>
                 )}
                 <Button
