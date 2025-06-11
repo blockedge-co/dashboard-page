@@ -138,23 +138,23 @@ export function CarbonDashboard() {
       score: 97,
       alerts: 0,
       lastCheck: "2 hours ago",
-      nextAudit: "Dec 2024"
+      nextAudit: "Dec 2024",
     },
     {
       jurisdiction: "California",
-      status: "Compliant", 
+      status: "Compliant",
       score: 94,
       alerts: 1,
       lastCheck: "4 hours ago",
-      nextAudit: "Jan 2025"
+      nextAudit: "Jan 2025",
     },
     {
       jurisdiction: "RGGI",
       status: "Compliant",
       score: 99,
       alerts: 0,
-      lastCheck: "1 hour ago", 
-      nextAudit: "Mar 2025"
+      lastCheck: "1 hour ago",
+      nextAudit: "Mar 2025",
     },
     {
       jurisdiction: "UK ETS",
@@ -162,8 +162,8 @@ export function CarbonDashboard() {
       score: 87,
       alerts: 2,
       lastCheck: "6 hours ago",
-      nextAudit: "Nov 2024"
-    }
+      nextAudit: "Nov 2024",
+    },
   ]);
 
   // Performance optimization
@@ -314,15 +314,15 @@ export function CarbonDashboard() {
                 color: "from-sky-500 to-indigo-600",
               },
               {
-                title: "Average Rating",
+                title: "Standards",
                 value:
-                  projectStatsData.averageRating > 0
-                    ? projectStatsData.averageRating.toFixed(1)
+                  projectStatsData.totalStandards > 0
+                    ? projectStatsData.totalStandards.toString()
                     : "—",
                 change: "",
                 trend: "up" as const,
-                icon: DollarSign,
-                pulse: true,
+                icon: Award,
+                pulse: false,
                 color: "from-emerald-500 to-teal-600",
               },
             ],
@@ -1779,7 +1779,6 @@ export function CarbonDashboard() {
                   {selectedProject.name}
                 </h2>
                 <div className="flex items-center gap-2 mb-2">
-
                   <Badge
                     variant="outline"
                     className="text-slate-300 border-slate-600"

@@ -244,7 +244,7 @@ export function ProjectsPage() {
               value: isLoading
                 ? "..."
                 : new Set(projects.map((p) => p.methodology)).size.toString(),
-              icon: Users,
+              icon: Award,
               color: "from-sky-500 to-indigo-600",
             },
           ].map((stat, index) => (

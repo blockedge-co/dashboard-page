@@ -839,6 +839,7 @@ class Co2eApiService {
     byRegistry: Record<string, number>;
     totalCO2Reduction: string;
     averageRating: number;
+    totalStandards: number;
   }> {
     const projects = await this.getProjects();
 
@@ -846,6 +847,7 @@ class Co2eApiService {
     const byCountry: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
     const byRegistry: Record<string, number> = {};
+    const byMethodology: Record<string, number> = {};
     let totalCO2 = 0;
     let totalRatings = 0;
     let ratingCount = 0;
@@ -862,6 +864,9 @@ class Co2eApiService {
 
       // Count by registry
       byRegistry[project.registry] = (byRegistry[project.registry] || 0) + 1;
+
+      // Count by methodology (standards)
+      byMethodology[project.methodology] = (byMethodology[project.methodology] || 0) + 1;
 
       // Sum CO2 reduction
       const co2Total = parseFloat(project.co2Reduction.total) || 0;
@@ -890,6 +895,7 @@ class Co2eApiService {
           ? `${(totalCO2 / 1000).toFixed(1)}K`
           : totalCO2.toLocaleString(),
       averageRating: ratingCount > 0 ? totalRatings / ratingCount : 0,
+      totalStandards: Object.keys(byMethodology).length,
     };
   }
 
