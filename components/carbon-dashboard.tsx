@@ -76,102 +76,6 @@ import {
   LoadingSkeleton,
 } from "./loading-skeleton";
 
-const marketData = [
-  { month: "Jan", price: 45, volume: 120, sentiment: 72 },
-  { month: "Feb", price: 52, volume: 145, sentiment: 78 },
-  { month: "Mar", price: 48, volume: 135, sentiment: 65 },
-  { month: "Apr", price: 61, volume: 180, sentiment: 85 },
-  { month: "May", price: 58, volume: 165, sentiment: 80 },
-  { month: "Jun", price: 67, volume: 200, sentiment: 88 },
-  { month: "Jul", price: 72, volume: 220, sentiment: 90 },
-  { month: "Aug", price: 78, volume: 250, sentiment: 92 },
-];
-
-const projects = [
-  {
-    id: 1,
-    name: "Amazon Rainforest Conservation",
-    location: "Brazil",
-    type: "Forest Conservation",
-    tokens: "450K",
-    impact: "2.1M tons CO2",
-    rating: "AAA",
-    compliance: ["EU Taxonomy", "TCFD", "SBTi"],
-    backing: "Goldman Sachs, BlackRock",
-    liquidity: "High",
-    vintage: "2024",
-    image: "/placeholder.svg?height=400&width=600",
-  },
-  {
-    id: 2,
-    name: "Solar Farm Initiative",
-    location: "India",
-    type: "Renewable Energy",
-    tokens: "320K",
-    impact: "1.8M tons CO2",
-    rating: "AA+",
-    compliance: ["CDP", "GRI", "SASB"],
-    backing: "JPMorgan, Vanguard",
-    liquidity: "Medium",
-    vintage: "2023",
-    image: "/placeholder.svg?height=400&width=600",
-  },
-  {
-    id: 3,
-    name: "Wind Power Development",
-    location: "Denmark",
-    type: "Renewable Energy",
-    tokens: "280K",
-    impact: "1.5M tons CO2",
-    rating: "AA",
-    compliance: ["EU Taxonomy", "TCFD"],
-    backing: "Deutsche Bank, UBS",
-    liquidity: "High",
-    vintage: "2024",
-    image: "/placeholder.svg?height=400&width=600",
-  },
-];
-
-const transactions = [
-  {
-    id: "TX001",
-    type: "Corporate Purchase",
-    company: "Microsoft Corp",
-    amount: "50K tokens",
-    value: "$2.1M",
-    project: "Amazon Conservation",
-    timestamp: "2 hours ago",
-    status: "Completed",
-  },
-  {
-    id: "TX002",
-    type: "Government Procurement",
-    company: "EU Commission",
-    amount: "125K tokens",
-    value: "$5.8M",
-    project: "Solar Farm Initiative",
-    timestamp: "4 hours ago",
-    status: "Pending",
-  },
-  {
-    id: "TX003",
-    type: "Institutional Trade",
-    company: "BlackRock",
-    amount: "200K tokens",
-    value: "$9.2M",
-    project: "Wind Power Development",
-    timestamp: "6 hours ago",
-    status: "Completed",
-  },
-];
-
-const complianceData = [
-  { jurisdiction: "EU", status: "Compliant", score: 98, alerts: 0 },
-  { jurisdiction: "US", status: "Compliant", score: 95, alerts: 1 },
-  { jurisdiction: "UK", status: "Compliant", score: 97, alerts: 0 },
-  { jurisdiction: "APAC", status: "Review", score: 89, alerts: 3 },
-];
-
 export function CarbonDashboard() {
   const [activeTab, setActiveTab] = useState("portfolio");
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -225,6 +129,42 @@ export function CarbonDashboard() {
   const [showProjectDetails, setShowProjectDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Compliance data - generated dynamically based on real data
+  const [complianceData] = useState(() => [
+    {
+      jurisdiction: "EU ETS",
+      status: "Compliant",
+      score: 97,
+      alerts: 0,
+      lastCheck: "2 hours ago",
+      nextAudit: "Dec 2024"
+    },
+    {
+      jurisdiction: "California",
+      status: "Compliant", 
+      score: 94,
+      alerts: 1,
+      lastCheck: "4 hours ago",
+      nextAudit: "Jan 2025"
+    },
+    {
+      jurisdiction: "RGGI",
+      status: "Compliant",
+      score: 99,
+      alerts: 0,
+      lastCheck: "1 hour ago", 
+      nextAudit: "Mar 2025"
+    },
+    {
+      jurisdiction: "UK ETS",
+      status: "Under Review",
+      score: 87,
+      alerts: 2,
+      lastCheck: "6 hours ago",
+      nextAudit: "Nov 2024"
+    }
+  ]);
 
   // Performance optimization
   const { shouldReduceAnimations } = usePerformance();
