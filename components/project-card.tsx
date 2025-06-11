@@ -57,10 +57,7 @@ const ProjectCard = memo(function ProjectCard({ project, index, onViewDetails }:
                 }
               </p>
             </div>
-            <div>
-              <span className="text-slate-500">Vintage</span>
-              <p className="font-semibold text-white">{project.vintage || "2024"}</p>
-            </div>
+
           </div>
 
           <div>

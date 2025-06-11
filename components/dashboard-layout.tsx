@@ -68,7 +68,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               variant="outline"
               className="bg-emerald-900/30 text-emerald-400 border-emerald-500/30 backdrop-blur-sm"
             >
-              Enterprise
+              Beta 1.0
             </Badge>
           </div>
 

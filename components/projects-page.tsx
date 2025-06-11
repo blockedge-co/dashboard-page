@@ -53,7 +53,10 @@ import { co2eApi, fetchNFTMetadata } from "@/lib/co2e-api";
 import { initializeProjectData } from "@/lib/project-data-manager";
 import { useDebouncedFilter } from "@/hooks/use-debounced-filter";
 import { usePerformance } from "@/hooks/use-performance";
-import { viewProjectOnBlockchain } from "@/lib/blockchain-utils";
+import {
+  viewTokenOnBlockchain,
+  viewCertOnBlockchain,
+} from "@/lib/blockchain-utils";
 
 export function ProjectsPage() {
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -213,7 +216,6 @@ export function ProjectsPage() {
               Discover verified carbon credit projects worldwide
             </p>
           </div>
-
         </div>
 
         {/* Stats Cards */}
@@ -506,7 +508,6 @@ export function ProjectsPage() {
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex gap-2">
                           {" "}
-
                           {(project.verified || project.verificationDate) && (
                             <Badge
                               variant="outline"
@@ -517,7 +518,6 @@ export function ProjectsPage() {
                             </Badge>
                           )}
                         </div>
-
                       </div>
                     </div>
                   </CardHeader>
@@ -528,13 +528,9 @@ export function ProjectsPage() {
                         <p className="font-semibold text-white">
                           {project.totalSupply
                             ? (() => {
-                                const co2Value = parseInt(
-                                  project.totalSupply
-                                );
+                                const co2Value = parseInt(project.totalSupply);
                                 return co2Value > 1000000
-                                  ? `${(co2Value / 1000000).toFixed(
-                                      1
-                                    )}M Tokens`
+                                  ? `${(co2Value / 1000000).toFixed(1)}M Tokens`
                                   : co2Value > 1000
                                   ? `${(co2Value / 1000).toFixed(0)}K Tokens`
                                   : `${co2Value.toLocaleString()} Tokens`;
@@ -551,9 +547,7 @@ export function ProjectsPage() {
                                   project.co2Reduction.total
                                 );
                                 return co2Value > 1000000
-                                  ? `${(co2Value / 1000000).toFixed(
-                                      1
-                                    )}M tCO2e`
+                                  ? `${(co2Value / 1000000).toFixed(1)}M tCO2e`
                                   : co2Value > 1000
                                   ? `${(co2Value / 1000).toFixed(0)}K tCO2e`
                                   : `${co2Value.toLocaleString()} tCO2e`;
@@ -567,15 +561,7 @@ export function ProjectsPage() {
                           {project.registry || project.liquidity || "N/A"}
                         </p>
                       </div>
-                      <div>
-                        <span className="text-slate-500">Vintage</span>
-                        <p className="font-semibold text-white">
-                          {project.vintage || "2024"}
-                        </p>
-                      </div>
                     </div>
-
-
 
                     <div>
                       <span className="text-sm text-slate-500">
@@ -677,7 +663,9 @@ export function ProjectsPage() {
                     variant="outline"
                     className="text-slate-300 border-slate-600"
                   >
-                    {nftMetadata?.metadata?.attributes?.find((attr: any) => attr.trait_type === "Credit category")?.value || selectedProject.type}
+                    {nftMetadata?.metadata?.attributes?.find(
+                      (attr: any) => attr.trait_type === "Credit category"
+                    )?.value || selectedProject.type}
                   </Badge>
                   <Badge
                     variant="outline"
@@ -694,9 +682,15 @@ export function ProjectsPage() {
                 </div>
                 <p className="text-slate-400">
                   {nftMetadata?.metadata?.description ? (
-                    <span className="line-clamp-2">{nftMetadata.metadata.description}</span>
+                    <span className="line-clamp-2">
+                      {nftMetadata.metadata.description}
+                    </span>
                   ) : (
-                    <>Carbon credit project focusing on {selectedProject.type.toLowerCase()} initiatives in {selectedProject.location}.</>
+                    <>
+                      Carbon credit project focusing on{" "}
+                      {selectedProject.type.toLowerCase()} initiatives in{" "}
+                      {selectedProject.location}.
+                    </>
                   )}
                 </p>
               </div>
@@ -715,12 +709,12 @@ export function ProjectsPage() {
               {/* NFT Image if available */}
               {(nftMetadata?.metadata?.image || nftMetadata?.image_url) && (
                 <div className="flex justify-center mb-6">
-                  <img 
-                    src={nftMetadata.metadata?.image || nftMetadata.image_url} 
+                  <img
+                    src={nftMetadata.metadata?.image || nftMetadata.image_url}
                     alt={nftMetadata?.metadata?.name || selectedProject.name}
                     className="rounded-lg shadow-lg max-h-64 object-contain bg-slate-800 p-2"
                     onError={(e) => {
-                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.style.display = "none";
                     }}
                   />
                 </div>
@@ -750,7 +744,8 @@ export function ProjectsPage() {
                   <div className="text-sm text-slate-400">CO2 Impact</div>
                   <div className="text-xl font-bold text-emerald-400">
                     {/* Always use project data for CO2 Impact, not the Amount from NFT */}
-                    {selectedProject.co2Reduction.total} {selectedProject.co2Reduction.unit}
+                    {selectedProject.co2Reduction.total}{" "}
+                    {selectedProject.co2Reduction.unit}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
@@ -760,8 +755,11 @@ export function ProjectsPage() {
                       <span className="animate-pulse">Loading...</span>
                     ) : (
                       <>
-                        {nftMetadata?.metadata?.attributes?.find((attr: any) => attr.trait_type === "Vintage")?.value || 
-                         selectedProject.vintage || "2024"}
+                        {nftMetadata?.metadata?.attributes?.find(
+                          (attr: any) => attr.trait_type === "Vintage"
+                        )?.value ||
+                          selectedProject.vintage ||
+                          "2024"}
                       </>
                     )}
                   </div>
@@ -773,8 +771,11 @@ export function ProjectsPage() {
                       <span className="animate-pulse">Loading...</span>
                     ) : (
                       <>
-                        {nftMetadata?.metadata?.attributes?.find((attr: any) => attr.trait_type === "Methodology")?.value || 
-                         selectedProject.methodology || "N/A"}
+                        {nftMetadata?.metadata?.attributes?.find(
+                          (attr: any) => attr.trait_type === "Methodology"
+                        )?.value ||
+                          selectedProject.methodology ||
+                          "N/A"}
                       </>
                     )}
                   </div>
@@ -803,7 +804,9 @@ export function ProjectsPage() {
                           <>
                             {/* Display all NFT attributes except Amount */}
                             {nftMetadata.metadata.attributes
-                              .filter((attr: any) => attr.trait_type !== "Amount")
+                              .filter(
+                                (attr: any) => attr.trait_type !== "Amount"
+                              )
                               .map((attr: any, index: number) => (
                                 <div key={index}>
                                   <span className="text-sm text-slate-400">
@@ -819,19 +822,34 @@ export function ProjectsPage() {
                               <span className="text-sm text-slate-400">
                                 Project Type
                               </span>
-                              <p className="text-white">{selectedProject.type}</p>
+                              <p className="text-white">
+                                {selectedProject.type}
+                              </p>
                             </div>
                             <div>
-                              <span className="text-sm text-slate-400">Location</span>
-                              <p className="text-white">{selectedProject.location}</p>
+                              <span className="text-sm text-slate-400">
+                                Location
+                              </span>
+                              <p className="text-white">
+                                {selectedProject.location}
+                              </p>
                             </div>
                             <div>
-                              <span className="text-sm text-slate-400">Project ID</span>
-                              <p className="text-white">#{selectedProject.id}</p>
+                              <span className="text-sm text-slate-400">
+                                Project ID
+                              </span>
+                              <p className="text-white">
+                                #{selectedProject.id}
+                              </p>
                             </div>
                             <div>
-                              <span className="text-sm text-slate-400">Registry</span>
-                              <p className="text-white">{selectedProject.registry || "Verified Registry"}</p>
+                              <span className="text-sm text-slate-400">
+                                Registry
+                              </span>
+                              <p className="text-white">
+                                {selectedProject.registry ||
+                                  "Verified Registry"}
+                              </p>
                             </div>
                           </>
                         )}
@@ -851,7 +869,10 @@ export function ProjectsPage() {
                         <span className="text-xs font-medium text-emerald-400">
                           🪙 Token Contract
                         </span>
-                        <Badge variant="outline" className="bg-emerald-900/50 text-emerald-300 border-emerald-500/30 text-xs">
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-900/50 text-emerald-300 border-emerald-500/30 text-xs"
+                        >
                           ERC-20
                         </Badge>
                       </div>
@@ -866,7 +887,9 @@ export function ProjectsPage() {
                             navigator.clipboard.writeText(
                               selectedProject.tokenAddress || ""
                             );
-                            alert("Token contract address copied to clipboard!");
+                            alert(
+                              "Token contract address copied to clipboard!"
+                            );
                           }}
                           className="h-7 w-7 p-0 border-emerald-600/50 hover:bg-emerald-800/30"
                         >
@@ -881,13 +904,17 @@ export function ProjectsPage() {
                         <span className="text-xs font-medium text-blue-400">
                           📜 Certificate Contract
                         </span>
-                        <Badge variant="outline" className="bg-blue-900/50 text-blue-300 border-blue-500/30 text-xs">
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-900/50 text-blue-300 border-blue-500/30 text-xs"
+                        >
                           ERC-721
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
                         <code className="text-xs bg-slate-800/80 px-2 py-1 rounded text-blue-300 font-mono flex-1 border border-blue-700/30">
-                          {selectedProject.certContract || "No cert contract found"}
+                          {selectedProject.certContract ||
+                            "No cert contract found"}
                         </code>
                         <Button
                           size="sm"
@@ -896,7 +923,9 @@ export function ProjectsPage() {
                             navigator.clipboard.writeText(
                               selectedProject.certContract || ""
                             );
-                            alert("Certificate contract address copied to clipboard!");
+                            alert(
+                              "Certificate contract address copied to clipboard!"
+                            );
                           }}
                           className="h-7 w-7 p-0 border-blue-600/50 hover:bg-blue-800/30"
                         >
@@ -932,7 +961,7 @@ export function ProjectsPage() {
               <div className="flex gap-3 pt-4">
                 <Button
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                  onClick={() => viewProjectOnBlockchain(selectedProject)}
+                  onClick={() => viewTokenOnBlockchain(selectedProject)}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View on Blockchain
@@ -941,7 +970,9 @@ export function ProjectsPage() {
                   <Button
                     variant="outline"
                     className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
-                    onClick={() => window.open(nftMetadata.metadata.url, '_blank')}
+                    onClick={() =>
+                      window.open(nftMetadata.metadata.url, "_blank")
+                    }
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
                     View Registry
