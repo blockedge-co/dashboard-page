@@ -40,7 +40,7 @@ Your JSON file should follow this structure:
       "co2Reduction": {
         "annual": "500000",
         "total": "2000000",
-        "unit": "tons CO2e"
+        "unit": "tCO2e"
       },
       "pricing": {
         "currentPrice": "35.00",

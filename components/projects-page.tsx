@@ -191,12 +191,7 @@ export function ProjectsPage() {
               Discover verified carbon credit projects worldwide
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700">
-              <Target className="w-4 h-4 mr-2" />
-              Create Project
-            </Button>
-          </div>
+
         </div>
 
         {/* Stats Cards */}
@@ -212,12 +207,17 @@ export function ProjectsPage() {
               title: "Active Tokens",
               value: isLoading
                 ? "..."
-                : `${Math.round(
-                    projects.reduce(
+                : (() => {
+                    const totalCO2 = projects.reduce(
                       (sum, p) => sum + parseInt(p.totalSupply || "0"),
                       0
-                    ) / 1000
-                  )}K`,
+                    );
+                    return totalCO2 > 1000000
+                      ? `${(totalCO2 / 1000000).toFixed(2)}M tCO2e`
+                      : totalCO2 > 1000
+                      ? `${(totalCO2 / 1000).toFixed(2)}K tCO2e`
+                      : `${totalCO2.toLocaleString()} tCO2e`;
+                  })(),
               icon: Leaf,
               color: "from-teal-500 to-cyan-600",
             },
@@ -231,10 +231,10 @@ export function ProjectsPage() {
                       0
                     );
                     return totalCO2 > 1000000
-                      ? `${(totalCO2 / 1000000).toFixed(1)}M tons`
+                      ? `${(totalCO2 / 1000000).toFixed(2)}M tCO2e`
                       : totalCO2 > 1000
-                      ? `${(totalCO2 / 1000).toFixed(0)}K tons`
-                      : `${totalCO2.toLocaleString()} tons`;
+                      ? `${(totalCO2 / 1000).toFixed(2)}K tCO2e`
+                      : `${totalCO2.toLocaleString()} tCO2e`;
                   })(),
               icon: TrendingUp,
               color: "from-cyan-500 to-sky-600",
@@ -299,7 +299,7 @@ export function ProjectsPage() {
               <ChartContainer
                 config={{
                   impact: {
-                    label: "CO2 Impact (K tons)",
+                    label: "CO2 Impact (K tCO2e)",
                     color: "hsl(var(--chart-1))",
                   },
                   projects: {
@@ -399,17 +399,7 @@ export function ProjectsPage() {
                   <SelectItem value="irec">I-REC</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                <SelectTrigger className="w-full sm:w-48 bg-slate-900/80 border-slate-700 text-slate-300">
-                  <SelectValue placeholder="Filter by" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-700 text-slate-300">
-                  <SelectItem value="all">All Projects</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="liquidity">High Liquidity</SelectItem>
-                  <SelectItem value="impact">Highest Impact</SelectItem>
-                </SelectContent>
-              </Select>
+
               <Button
                 variant="outline"
                 className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
@@ -494,12 +484,7 @@ export function ProjectsPage() {
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex gap-2">
                           {" "}
-                          <Badge
-                            variant="outline"
-                            className="bg-emerald-900/80 text-emerald-400 border-emerald-500/30 backdrop-blur-sm"
-                          >
-                            {project.rating || "AA"}
-                          </Badge>
+
                           {(project.verified || project.verificationDate) && (
                             <Badge
                               variant="outline"
@@ -520,9 +505,18 @@ export function ProjectsPage() {
                         <span className="text-slate-500">Tokens</span>
                         <p className="font-semibold text-white">
                           {project.totalSupply
-                            ? `${Math.round(
-                                parseInt(project.totalSupply) / 1000
-                              )}K`
+                            ? (() => {
+                                const co2Value = parseInt(
+                                  project.totalSupply
+                                );
+                                return co2Value > 1000000
+                                  ? `${(co2Value / 1000000).toFixed(
+                                      1
+                                    )}M Tokens`
+                                  : co2Value > 1000
+                                  ? `${(co2Value / 1000).toFixed(0)}K Tokens`
+                                  : `${co2Value.toLocaleString()} Tokens`;
+                              })()
                             : project.tokens || "N/A"}
                         </p>
                       </div>
@@ -537,10 +531,10 @@ export function ProjectsPage() {
                                 return co2Value > 1000000
                                   ? `${(co2Value / 1000000).toFixed(
                                       1
-                                    )}M tons CO2`
+                                    )}M tCO2e`
                                   : co2Value > 1000
-                                  ? `${(co2Value / 1000).toFixed(0)}K tons CO2`
-                                  : `${co2Value.toLocaleString()} tons CO2`;
+                                  ? `${(co2Value / 1000).toFixed(0)}K tCO2e`
+                                  : `${co2Value.toLocaleString()} tCO2e`;
                               })()
                             : project.impact || "N/A"}
                         </p>
@@ -559,22 +553,7 @@ export function ProjectsPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-slate-500">Project Status</span>
-                        <span className="text-white font-medium">
-                          {project.verified ? "Verified" : "Pending"}
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-700 rounded-full h-2">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: project.verified ? "100%" : "75%" }}
-                          transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
-                          className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full"
-                        />
-                      </div>
-                    </div>
+
 
                     <div>
                       <span className="text-sm text-slate-500">
@@ -672,9 +651,7 @@ export function ProjectsPage() {
                   {selectedProject.name}
                 </h2>
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-emerald-900/50 text-emerald-400 border-emerald-500/30">
-                    {selectedProject.rating || "AA+"}
-                  </Badge>
+
                   <Badge
                     variant="outline"
                     className="text-slate-300 border-slate-600"
@@ -711,6 +688,7 @@ export function ProjectsPage() {
                 <MapPin className="w-4 h-4 text-emerald-400" />
                 <span className="text-slate-300">
                   {selectedProject.location}
+                  {console.log(selectedProject)}
                 </span>
               </div>
 
@@ -719,25 +697,19 @@ export function ProjectsPage() {
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Current Supply</div>
                   <div className="text-xl font-bold text-white">
-                    {selectedProject.tokens || "N/A"}
+                    {selectedProject.totalSupply || "N/A"} Tokens
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">CO2 Impact</div>
                   <div className="text-xl font-bold text-emerald-400">
-                    {selectedProject.impact || "N/A"}
+                    {selectedProject.co2Reduction.total}  {selectedProject.co2Reduction.unit}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Vintage Year</div>
                   <div className="text-xl font-bold text-white">
                     {selectedProject.vintage || "2024"}
-                  </div>
-                </div>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Current Price</div>
-                  <div className="text-xl font-bold text-emerald-400">
-                    {selectedProject.price || "--"}
                   </div>
                 </div>
               </div>
@@ -759,34 +731,7 @@ export function ProjectsPage() {
                       <span className="text-sm text-slate-400">Location</span>
                       <p className="text-white">{selectedProject.location}</p>
                     </div>
-                    <div>
-                      <span className="text-sm text-slate-400">Liquidity</span>
-                      <p className="text-white">
-                        {selectedProject.liquidity || "Medium"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">Progress</span>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-slate-700 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full"
-                            style={{ width: `${selectedProject.progress}%` }}
-                          />
-                        </div>
-                        <span className="text-white text-sm">
-                          {selectedProject.progress}%
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">
-                        Institutional Backing
-                      </span>
-                      <p className="text-white">
-                        {selectedProject.backing || "Various Institutions"}
-                      </p>
-                    </div>
+
                   </div>
                 </div>
 
@@ -795,28 +740,7 @@ export function ProjectsPage() {
                     Performance Metrics
                   </h3>
                   <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-slate-400">Rating</span>
-                      <p className="text-white">{selectedProject.rating}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">
-                        Price Change
-                      </span>
-                      <p className="text-emerald-400">
-                        {selectedProject.change || "+0.0%"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">
-                        Verification Status
-                      </span>
-                      <p className="text-white">
-                        {selectedProject.verified
-                          ? "Verified"
-                          : "Pending Verification"}
-                      </p>
-                    </div>
+
                     <div>
                       <span className="text-sm text-slate-400">Project ID</span>
                       <p className="text-white">#{selectedProject.id}</p>

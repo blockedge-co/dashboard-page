@@ -69,9 +69,9 @@ export interface ProjectData {
   registry: string; // Registry like "Verra", "TUV SUD", etc.
   verificationDate: string;
   co2Reduction: {
-    annual: string; // tons CO2 per year
-    total: string; // total tons CO2
-    unit: string; // "tons CO2e"
+    annual: string; // tCO2e per year
+    total: string; // total tCO2e
+    unit: string; // "tCO2e"
   };
   pricing: {
     currentPrice: string;
@@ -234,7 +234,7 @@ class Co2eApiService {
               co2Reduction: {
                 annual: "0", // Will be calculated from real token data
                 total: "0", // Will be calculated from real token data
-                unit: "tons CO2e",
+                unit: "tCO2e",
               },
               pricing: {
                 currentPrice: "0", // Will be fetched from real market data
@@ -610,11 +610,11 @@ class Co2eApiService {
 
     let baseAnnual: number;
     if (isLargeProject) {
-      baseAnnual = 50000 + (hash % 150000); // 50K-200K tons for large projects
+      baseAnnual = 50000 + (hash % 150000); // 50K-200K tCO2e for large projects
     } else if (isRenewableEnergy) {
-      baseAnnual = 15000 + (hash % 35000); // 15K-50K tons for renewable energy
+      baseAnnual = 15000 + (hash % 35000); // 15K-50K tCO2e for renewable energy
     } else {
-      baseAnnual = 5000 + (hash % 20000); // 5K-25K tons for other projects
+      baseAnnual = 5000 + (hash % 20000); // 5K-25K tCO2e for other projects
     }
 
     const projectAge = 2 + (hash % 8); // 2-10 years project life
@@ -623,7 +623,7 @@ class Co2eApiService {
     return {
       annual: Math.floor(baseAnnual).toString(),
       total: Math.floor(totalReduction).toString(),
-      unit: "tons CO2e",
+      unit: "tCO2e",
     };
   }
 
@@ -1099,7 +1099,7 @@ class Co2eApiService {
     return {
       annual: annualReduction.toString(),
       total: totalCO2Reduction.toString(),
-      unit: "tons CO2e",
+      unit: "tCO2e",
     };
   }
 
@@ -1125,10 +1125,10 @@ class Co2eApiService {
     
     const totalInvestment = totalCO2 * investmentPerTon;
     
-    // Calculate jobs created (1 job per 1000 tons CO2e reduced)
+    // Calculate jobs created (1 job per 1000 tCO2e reduced)
     const jobsCreated = Math.max(1, Math.floor(totalCO2 / 1000));
     
-    // Calculate communities impacted (1 community per 5000 tons CO2e)
+    // Calculate communities impacted (1 community per 5000 tCO2e)
     const communitiesImpacted = Math.max(1, Math.floor(totalCO2 / 5000));
 
     return {
@@ -1326,7 +1326,7 @@ class Co2eApiService {
         co2Reduction: {
           annual: "25000",
           total: "100000",
-          unit: "tons CO2e",
+          unit: "tCO2e",
         },
         pricing: {
           currentPrice: "42.50",
@@ -1360,8 +1360,8 @@ class Co2eApiService {
       heroMetrics: [
         {
           title: "Total CO2e Value Locked",
-          value: "1.3M",
-          change: "+12.4%",
+          value: "",
+          change: "",
           trend: "up" as const,
           icon: "DollarSign" as const,
           pulse: true,
@@ -1369,8 +1369,8 @@ class Co2eApiService {
         },
         {
           title: "Active Blocks",
-          value: "1,298,612",
-          change: "+8.7%",
+          value: "",
+          change: "",
           trend: "up" as const,
           icon: "Leaf" as const,
           pulse: true,
@@ -1378,8 +1378,8 @@ class Co2eApiService {
         },
         {
           title: "Total Transactions",
-          value: "1,297,527",
-          change: "+23",
+          value: "",
+          change: "",
           trend: "up" as const,
           icon: "Award" as const,
           pulse: false,
@@ -1387,8 +1387,8 @@ class Co2eApiService {
         },
         {
           title: "Active Addresses",
-          value: "48",
-          change: "+5.2%",
+          value: "",
+          change: "",
           trend: "up" as const,
           icon: "Building2" as const,
           pulse: true,

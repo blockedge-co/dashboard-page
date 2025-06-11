@@ -740,7 +740,7 @@ export function AnalyticsPage() {
                   <ChartContainer
                     config={{
                       impact: {
-                        label: "CO2 Impact (K tons)",
+                        label: "CO2 Impact (K tCO2e)",
                         color: "hsl(var(--chart-1))",
                       },
                     }}

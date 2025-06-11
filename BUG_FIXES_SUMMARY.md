@@ -32,7 +32,7 @@
 - **Problem**: UI designed for mock data doesn't work with real BlockEdge API data
 - **Fix**: Updated all data mappings to work with actual BlockEdge JSON structure:
   - Token display: Uses `totalSupply` and formats as "1000K"
-  - Impact display: Uses `co2Reduction.total` and formats as "2M tons CO2"
+  - Impact display: Uses `co2Reduction.total` and formats as "2M tCO2e"
   - Status display: Uses `verified` or `verificationDate` presence
   - Standards: Uses `methodology` and `certificationBody` instead of mock compliance array
 

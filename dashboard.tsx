@@ -41,32 +41,32 @@ import { Area, AreaChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid
 const heroMetrics = [
   {
     title: "Total Carbon Value Locked",
-    value: "$47.2M",
-    change: "+12.4%",
+    value: "",
+    change: "",
     trend: "up",
     icon: DollarSign,
     pulse: true,
   },
   {
     title: "Active Carbon Tokens",
-    value: "2.4M",
-    change: "+8.7%",
+    value: "",
+    change: "",
     trend: "up",
     icon: Leaf,
     pulse: true,
   },
   {
     title: "Verified Projects",
-    value: "847",
-    change: "+23",
+    value: "",
+    change: "",
     trend: "up",
     icon: Award,
     pulse: false,
   },
   {
     title: "Corporate Participants",
-    value: "156K",
-    change: "+5.2%",
+    value: "",
+    change: "",
     trend: "up",
     icon: Building2,
     pulse: true,
@@ -83,45 +83,7 @@ const marketData = [
 ]
 
 const projects = [
-  {
-    id: 1,
-    name: "Amazon Rainforest Conservation",
-    location: "Brazil",
-    type: "Forest Conservation",
-    tokens: "450K",
-    impact: "2.1M tons CO2",
-    rating: "AAA",
-    compliance: ["EU Taxonomy", "TCFD", "SBTi"],
-    backing: "Goldman Sachs, BlackRock",
-    liquidity: "High",
-    vintage: "2024",
-  },
-  {
-    id: 2,
-    name: "Solar Farm Initiative",
-    location: "India",
-    type: "Renewable Energy",
-    tokens: "320K",
-    impact: "1.8M tons CO2",
-    rating: "AA+",
-    compliance: ["CDP", "GRI", "SASB"],
-    backing: "JPMorgan, Vanguard",
-    liquidity: "Medium",
-    vintage: "2023",
-  },
-  {
-    id: 3,
-    name: "Wind Power Development",
-    location: "Denmark",
-    type: "Renewable Energy",
-    tokens: "280K",
-    impact: "1.5M tons CO2",
-    rating: "AA",
-    compliance: ["EU Taxonomy", "TCFD"],
-    backing: "Deutsche Bank, UBS",
-    liquidity: "High",
-    vintage: "2024",
-  },
+
 ]
 
 const transactions = [
@@ -403,10 +365,6 @@ export default function BlockedgeDashboard() {
                           <div>
                             <span className="text-slate-500">Impact</span>
                             <p className="font-semibold">{project.impact}</p>
-                          </div>
-                          <div>
-                            <span className="text-slate-500">Liquidity</span>
-                            <p className="font-semibold">{project.liquidity}</p>
                           </div>
                           <div>
                             <span className="text-slate-500">Vintage</span>

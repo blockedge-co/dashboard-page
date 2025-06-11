@@ -36,32 +36,26 @@ const ProjectCard = memo(function ProjectCard({ project, index, onViewDetails }:
                 <span className="text-xs text-slate-300">{project.location}</span>
               </div>
             </div>
-            <Badge
-              variant="outline"
-              className="bg-emerald-900/80 text-emerald-400 border-emerald-500/30 backdrop-blur-sm"
-            >
-              {project.rating || "N/A"}
-            </Badge>
+
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-slate-500">Current Supply</span>
-              <p className="font-semibold text-white">{project.currentSupply || project.tokens || "N/A"}</p>
+              <p className="font-semibold text-white">{project.co2Reduction?.total ? 
+                  `${parseInt(project.co2Reduction.total).toLocaleString()} Tokens` : 
+                  project.impact || "N/A"
+                }</p>
             </div>
             <div>
               <span className="text-slate-500">CO2 Impact</span>
               <p className="font-semibold text-white">
                 {project.co2Reduction?.total ? 
-                  `${parseInt(project.co2Reduction.total).toLocaleString()} tons` : 
+                  `${parseInt(project.co2Reduction.total).toLocaleString()} tCO2e` : 
                   project.impact || "N/A"
                 }
               </p>
-            </div>
-            <div>
-              <span className="text-slate-500">Liquidity</span>
-              <p className="font-semibold text-white capitalize">{project.liquidity || "Medium"}</p>
             </div>
             <div>
               <span className="text-slate-500">Vintage</span>

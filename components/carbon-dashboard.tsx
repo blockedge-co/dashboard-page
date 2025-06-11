@@ -282,7 +282,7 @@ export function CarbonDashboard() {
                   projectStatsData.total > 0
                     ? projectStatsData.total.toString()
                     : "—",
-                change: "+8.7%",
+                change: "",
                 trend: "up" as const,
                 icon: Leaf,
                 pulse: true,
@@ -293,9 +293,9 @@ export function CarbonDashboard() {
                 value:
                   projectStatsData.totalCO2Reduction &&
                   projectStatsData.totalCO2Reduction !== "0"
-                    ? `${projectStatsData.totalCO2Reduction} tons`
+                    ? `${projectStatsData.totalCO2Reduction}`
                     : "—",
-                change: "+23",
+                change: "",
                 trend: "up" as const,
                 icon: Award,
                 pulse: false,
@@ -307,7 +307,7 @@ export function CarbonDashboard() {
                   stats.total_blocks && stats.total_blocks !== "0"
                     ? stats.total_blocks
                     : realData.heroMetrics[2].value,
-                change: "+5.2%",
+                change: "",
                 trend: "up" as const,
                 icon: Building2,
                 pulse: true,
@@ -319,7 +319,7 @@ export function CarbonDashboard() {
                   projectStatsData.averageRating > 0
                     ? projectStatsData.averageRating.toFixed(1)
                     : "—",
-                change: "+0.1",
+                change: "",
                 trend: "up" as const,
                 icon: DollarSign,
                 pulse: true,
@@ -1779,9 +1779,7 @@ export function CarbonDashboard() {
                   {selectedProject.name}
                 </h2>
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-emerald-900/50 text-emerald-400 border-emerald-500/30">
-                    {selectedProject.rating || "AA+"}
-                  </Badge>
+
                   <Badge
                     variant="outline"
                     className="text-slate-300 border-slate-600"
@@ -1822,9 +1820,11 @@ export function CarbonDashboard() {
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Current Supply</div>
                   <div className="text-xl font-bold text-white">
-                    {selectedProject.currentSupply ||
-                      selectedProject.tokens ||
-                      "N/A"}
+                    {selectedProject.co2Reduction?.total
+                      ? `${parseInt(
+                          selectedProject.co2Reduction.total
+                        ).toLocaleString()} Tokens`
+                      : selectedProject.impact || " Tokens"}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
@@ -1833,20 +1833,14 @@ export function CarbonDashboard() {
                     {selectedProject.co2Reduction?.total
                       ? `${parseInt(
                           selectedProject.co2Reduction.total
-                        ).toLocaleString()} tons`
-                      : selectedProject.impact || "2M tons"}
+                        ).toLocaleString()} tCO2e`
+                      : selectedProject.impact || " tCO2e"}
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Vintage Year</div>
                   <div className="text-xl font-bold text-white">
                     {selectedProject.vintage || "2024"}
-                  </div>
-                </div>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Current Price</div>
-                  <div className="text-xl font-bold text-emerald-400">
-                    ${selectedProject.pricing?.currentPrice || "42.50"}
                   </div>
                 </div>
               </div>
@@ -1910,6 +1904,7 @@ export function CarbonDashboard() {
                         <code className="text-sm bg-slate-700 px-2 py-1 rounded text-emerald-400">
                           {selectedProject.tokenAddress?.slice(0, 10)}...
                           {selectedProject.tokenAddress?.slice(-6)}
+                          {console.log(selectedProject)}
                         </code>
                         <Button
                           size="sm"

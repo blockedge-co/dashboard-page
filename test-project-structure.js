@@ -46,7 +46,7 @@ const tokensDisplay = project.totalSupply ? `${Math.round(parseInt(project.total
 console.log(`Tokens: ${tokensDisplay}`);
 
 // Test impact display
-const impactDisplay = project.co2Reduction?.total ? `${Math.round(parseInt(project.co2Reduction.total) / 1000000)}M tons CO2` : "N/A";
+const impactDisplay = project.co2Reduction?.total ? `${Math.round(parseInt(project.co2Reduction.total) / 1000000)}M tCO2e` : "N/A";
 console.log(`Impact: ${impactDisplay}`);
 
 // Test verification status
