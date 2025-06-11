@@ -1814,6 +1814,17 @@ export function CarbonDashboard() {
                 </span>
               </div>
 
+              {/* Debug Information - Remove in production */}
+              <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-red-400 mb-2">Debug Info (Remove in production)</h4>
+                <div className="text-xs text-slate-300 space-y-1">
+                  <div>Token Address: {selectedProject.tokenAddress || "None"}</div>
+                  <div>Cert Contract: {selectedProject.certContract || "None"}</div>
+                  <div>_certContract: {(selectedProject as any)._certContract || "None"}</div>
+                  <div>All Keys: {Object.keys(selectedProject).join(", ")}</div>
+                </div>
+              </div>
+
               {/* Key Metrics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-700/50 rounded-lg p-4">
@@ -1892,52 +1903,97 @@ export function CarbonDashboard() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-white">
-                    Blockchain Details
+                    Blockchain Contracts
                   </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-slate-400">
-                        Token Address
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <code className="text-sm bg-slate-700 px-2 py-1 rounded text-emerald-400">
-                          {selectedProject.tokenAddress?.slice(0, 10)}...
-                          {selectedProject.tokenAddress?.slice(-6)}
-                          {console.log(selectedProject)}
+                  <div className="space-y-4">
+                    {/* Token Contract */}
+                    <div className="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-700/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-emerald-400">
+                          🪙 Token Contract (ERC-20)
+                        </span>
+                        <Badge variant="outline" className="bg-emerald-900/50 text-emerald-300 border-emerald-500/30">
+                          Active
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <code className="text-sm bg-slate-800/80 px-3 py-2 rounded-md text-emerald-300 font-mono flex-1 border border-emerald-700/30">
+                          {selectedProject.tokenAddress || "0x..."}
                         </code>
                         <Button
                           size="sm"
-                          variant="ghost"
-                          onClick={() =>
+                          variant="outline"
+                          onClick={() => {
                             navigator.clipboard.writeText(
-                              selectedProject.tokenAddress
-                            )
-                          }
-                          className="h-6 w-6 p-0"
+                              selectedProject.tokenAddress || ""
+                            );
+                            // Simple feedback - could be replaced with toast library
+                            alert("Token contract address copied to clipboard!");
+                          }}
+                          className="h-9 w-9 p-0 border-emerald-600/50 hover:bg-emerald-800/30 hover:border-emerald-500"
                         >
-                          <Copy className="w-3 h-3" />
+                          <Copy className="w-4 h-4 text-emerald-400" />
                         </Button>
                       </div>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-400">Total Supply</span>
+                          <p className="text-emerald-300 font-medium">
+                            {selectedProject.totalSupply || "1,000,000"} Tokens
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Holders</span>
+                          <p className="text-emerald-300 font-medium">
+                            {selectedProject.holders || "156"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-sm text-slate-400">
-                        Total Supply
-                      </span>
-                      <p className="text-white">
-                        {selectedProject.totalSupply || "1,000,000"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">Holders</span>
-                      <p className="text-white">
-                        {selectedProject.holders || "156"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-slate-400">Transfers</span>
-                      <p className="text-white">
-                        {selectedProject.transfers || "1,247"}
-                      </p>
+
+                    {/* Certificate Contract */}
+                    <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-700/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-blue-400">
+                          📜 Certificate Contract (ERC-721)
+                        </span>
+                        <Badge variant="outline" className="bg-blue-900/50 text-blue-300 border-blue-500/30">
+                          Verified
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <code className="text-sm bg-slate-800/80 px-3 py-2 rounded-md text-blue-300 font-mono flex-1 border border-blue-700/30">
+                          {selectedProject.certContract || "No cert contract found"}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              selectedProject.certContract || ""
+                            );
+                            // Simple feedback - could be replaced with toast library
+                            alert("Certificate contract address copied to clipboard!");
+                          }}
+                          className="h-9 w-9 p-0 border-blue-600/50 hover:bg-blue-800/30 hover:border-blue-500"
+                        >
+                          <Copy className="w-4 h-4 text-blue-400" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-400">NFT Certificates</span>
+                          <p className="text-blue-300 font-medium">
+                            {selectedProject.certificates || "1"} NFT
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Transfers</span>
+                          <p className="text-blue-300 font-medium">
+                            {selectedProject.transfers || "1,247"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

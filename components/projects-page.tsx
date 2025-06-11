@@ -731,19 +731,80 @@ export function ProjectsPage() {
                       <span className="text-sm text-slate-400">Location</span>
                       <p className="text-white">{selectedProject.location}</p>
                     </div>
-
+                    <div>
+                      <span className="text-sm text-slate-400">Project ID</span>
+                      <p className="text-white">#{selectedProject.id}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-400">Registry</span>
+                      <p className="text-white">{selectedProject.registry || "Verified Registry"}</p>
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-white">
-                    Performance Metrics
+                    Blockchain Contracts
                   </h3>
                   <div className="space-y-3">
+                    {/* Token Contract */}
+                    <div className="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-700/30 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-emerald-400">
+                          🪙 Token Contract
+                        </span>
+                        <Badge variant="outline" className="bg-emerald-900/50 text-emerald-300 border-emerald-500/30 text-xs">
+                          ERC-20
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-slate-800/80 px-2 py-1 rounded text-emerald-300 font-mono flex-1 border border-emerald-700/30">
+                          {selectedProject.tokenAddress || "0x..."}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              selectedProject.tokenAddress || ""
+                            );
+                            alert("Token contract address copied to clipboard!");
+                          }}
+                          className="h-7 w-7 p-0 border-emerald-600/50 hover:bg-emerald-800/30"
+                        >
+                          <Copy className="w-3 h-3 text-emerald-400" />
+                        </Button>
+                      </div>
+                    </div>
 
-                    <div>
-                      <span className="text-sm text-slate-400">Project ID</span>
-                      <p className="text-white">#{selectedProject.id}</p>
+                    {/* Certificate Contract */}
+                    <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-700/30 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-blue-400">
+                          📜 Certificate Contract
+                        </span>
+                        <Badge variant="outline" className="bg-blue-900/50 text-blue-300 border-blue-500/30 text-xs">
+                          ERC-721
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-slate-800/80 px-2 py-1 rounded text-blue-300 font-mono flex-1 border border-blue-700/30">
+                          {selectedProject.certContract || "No cert contract found"}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              selectedProject.certContract || ""
+                            );
+                            alert("Certificate contract address copied to clipboard!");
+                          }}
+                          className="h-7 w-7 p-0 border-blue-600/50 hover:bg-blue-800/30"
+                        >
+                          <Copy className="w-3 h-3 text-blue-400" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

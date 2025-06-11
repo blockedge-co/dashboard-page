@@ -59,6 +59,7 @@ export interface ProjectData {
   tokenAddress: string;
   tokenSymbol: string;
   tokenName: string;
+  certContract?: string; // Certificate contract address (ERC-721)
   totalSupply: string;
   currentSupply: string;
   retired: string;
@@ -204,6 +205,9 @@ class Co2eApiService {
             // Collect cert contract for NFT image fetching
             if (project.cert) {
               certContracts.push(project.cert);
+              console.log(`📜 Found cert contract for ${project.projectId}: ${project.cert}`);
+            } else {
+              console.warn(`⚠️ No cert contract found for project ${project.projectId}`);
             }
 
             // Create project with placeholder values that will be updated with real blockchain data
@@ -265,7 +269,7 @@ class Co2eApiService {
                   .toLowerCase()
                   .replace(/\s+/g, "-"),
               ],
-              // Store cert contract for image fetching
+              // Store cert contract for image fetching and UI display
               _certContract: project.cert,
             });
           });
@@ -313,8 +317,7 @@ class Co2eApiService {
             }
           }
 
-          // Clean up temporary cert contract field
-          delete project._certContract;
+          // Keep cert contract field for later use - don't delete it!
         });
 
         console.log(
@@ -432,10 +435,22 @@ class Co2eApiService {
       `🎉 Successfully processed ${projects.length} projects with real/realistic blockchain data`
     );
 
-    // Clean up _certContract field from all projects and return as ProjectData[]
+    // Convert projects to final format, preserving cert contract for UI display
     return projects.map((project) => {
       const { _certContract, ...cleanProject } = project;
-      return cleanProject as ProjectData;
+      const finalProject = {
+        ...cleanProject,
+        certContract: _certContract, // Preserve cert contract for UI display
+      } as ProjectData & { certContract?: string };
+      
+      // Log cert contract preservation
+      if (_certContract) {
+        console.log(`✅ Preserved cert contract for ${finalProject.id}: ${_certContract}`);
+      } else {
+        console.warn(`❌ No cert contract preserved for ${finalProject.id}`);
+      }
+      
+      return finalProject;
     });
   }
 
