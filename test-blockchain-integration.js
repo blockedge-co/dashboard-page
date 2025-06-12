@@ -6,7 +6,7 @@
  */
 
 const {
-  viewProjectOnBlockchain,
+  viewTokenOnBlockchain,
   openTokenInExplorer,
   getTokenExplorerUrl,
   isValidAddress,

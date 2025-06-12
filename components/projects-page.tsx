@@ -232,16 +232,16 @@ export function ProjectsPage() {
               value: isLoading
                 ? "..."
                 : (() => {
-                    const totalCO2 = projects.reduce(
-                      (sum, p) => sum + parseInt(p.totalSupply || "0"),
-                      0
-                    );
-                    return totalCO2 > 1000000
-                      ? `${(totalCO2 / 1000000).toFixed(2)}M tCO2e`
-                      : totalCO2 > 1000
+                  const totalCO2 = projects.reduce(
+                    (sum, p) => sum + parseInt(p.totalSupply || "0"),
+                    0
+                  );
+                  return totalCO2 > 1000000
+                    ? `${(totalCO2 / 1000000).toFixed(2)}M tCO2e`
+                    : totalCO2 > 1000
                       ? `${(totalCO2 / 1000).toFixed(2)}K tCO2e`
                       : `${totalCO2.toLocaleString()} tCO2e`;
-                  })(),
+                })(),
               icon: Leaf,
               color: "from-teal-500 to-cyan-600",
             },
@@ -250,16 +250,16 @@ export function ProjectsPage() {
               value: isLoading
                 ? "..."
                 : (() => {
-                    const totalCO2 = projects.reduce(
-                      (sum, p) => sum + parseInt(p.co2Reduction?.total || "0"),
-                      0
-                    );
-                    return totalCO2 > 1000000
-                      ? `${(totalCO2 / 1000000).toFixed(2)}M tCO2e`
-                      : totalCO2 > 1000
+                  const totalCO2 = projects.reduce(
+                    (sum, p) => sum + parseInt(p.co2Reduction?.total || "0"),
+                    0
+                  );
+                  return totalCO2 > 1000000
+                    ? `${(totalCO2 / 1000000).toFixed(2)}M tCO2e`
+                    : totalCO2 > 1000
                       ? `${(totalCO2 / 1000).toFixed(2)}K tCO2e`
                       : `${totalCO2.toLocaleString()} tCO2e`;
-                  })(),
+                })(),
               icon: TrendingUp,
               color: "from-cyan-500 to-sky-600",
             },
@@ -405,7 +405,7 @@ export function ProjectsPage() {
                   <SelectItem value="renewable">Renewable Energy</SelectItem>
                   <SelectItem value="forest">Forest Conservation</SelectItem>
                   <SelectItem value="blue">Hydropower Energy</SelectItem>
-                  </SelectContent>
+                </SelectContent>
               </Select>
 
 
@@ -513,13 +513,13 @@ export function ProjectsPage() {
                         <p className="font-semibold text-white">
                           {project.totalSupply
                             ? (() => {
-                                const co2Value = parseInt(project.totalSupply);
-                                return co2Value > 1000000
-                                  ? `${(co2Value / 1000000).toFixed(1)}M Tokens`
-                                  : co2Value > 1000
+                              const co2Value = parseInt(project.totalSupply);
+                              return co2Value > 1000000
+                                ? `${(co2Value / 1000000).toFixed(1)}M Tokens`
+                                : co2Value > 1000
                                   ? `${(co2Value / 1000).toFixed(0)}K Tokens`
                                   : `${co2Value.toLocaleString()} Tokens`;
-                              })()
+                            })()
                             : project.tokens || "N/A"}
                         </p>
                       </div>
@@ -528,16 +528,21 @@ export function ProjectsPage() {
                         <p className="font-semibold text-white">
                           {project.co2Reduction?.total
                             ? (() => {
-                                const co2Value = parseInt(
-                                  project.co2Reduction.total
-                                );
-                                return co2Value > 1000000
-                                  ? `${(co2Value / 1000000).toFixed(1)}M tCO2e`
-                                  : co2Value > 1000
-                                  ? `${(co2Value / 1000).toFixed(0)}K tCO2e`
-                                  : `${co2Value.toLocaleString()} tCO2e`;
-                              })()
+                              const co2Value = parseInt(
+                                project.co2Reduction.total
+                              );
+                              return co2Value > 1000000
+                                ? `${(co2Value / 1000000).toFixed(1)}M `
+                                : co2Value > 1000
+                                  ? `${(co2Value / 1000).toFixed(0)}K `
+                                  : `${co2Value.toLocaleString()} `;
+                            })()
                             : project.impact || "N/A"}
+                          {project.registry == 'IREC' ? (
+                            "MWh"
+                          ) : (
+                            project.co2Reduction.unit
+                          )}
                         </p>
                       </div>
                       <div>
@@ -710,6 +715,7 @@ export function ProjectsPage() {
                 <span className="text-slate-300">
                   {selectedProject.location}
                   {console.log(selectedProject)}
+                  {console.log(selectedProject.registry)}
                 </span>
               </div>
 
@@ -730,7 +736,12 @@ export function ProjectsPage() {
                   <div className="text-xl font-bold text-emerald-400">
                     {/* Always use project data for CO2 Impact, not the Amount from NFT */}
                     {selectedProject.co2Reduction.total}{" "}
-                    {selectedProject.co2Reduction.unit}
+                    {selectedProject.registry == 'IREC' ? (
+                      "MWh"
+                    ) : (
+                      selectedProject.co2Reduction.unit
+                    )}
+
                   </div>
                 </div>
                 <div className="bg-slate-700/50 rounded-lg p-4">

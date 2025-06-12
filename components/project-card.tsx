@@ -52,7 +52,7 @@ const ProjectCard = memo(function ProjectCard({ project, index, onViewDetails }:
               <span className="text-slate-500">CO2 Impact</span>
               <p className="font-semibold text-white">
                 {project.co2Reduction?.total ? 
-                  `${parseInt(project.co2Reduction.total).toLocaleString()} tCO2e` : 
+                  `${parseInt(project.co2Reduction.total).toLocaleString()}` : 
                   project.impact || "N/A"
                 }
               </p>
