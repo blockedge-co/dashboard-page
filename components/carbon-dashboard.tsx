@@ -29,6 +29,7 @@ import {
   X,
   Copy,
   ExternalLink,
+  Coins,
 } from "lucide-react";
 
 import {
@@ -75,6 +76,8 @@ import {
   LoadingMetric,
   LoadingSkeleton,
 } from "./loading-skeleton";
+import { RetirementAnalytics } from "./retirement-panels/retirement-analytics";
+import { TokenizationMetrics } from "./tokenization-metrics-enhanced";
 
 export function CarbonDashboard() {
   const [activeTab, setActiveTab] = useState("portfolio");
@@ -429,7 +432,7 @@ export function CarbonDashboard() {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-6 space-y-8" data-testid="dashboard-container">
       {/* Hero Metrics */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -461,7 +464,7 @@ export function CarbonDashboard() {
               className="relative group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-70" />
-              <Card className="relative overflow-hidden bg-slate-800/50 backdrop-blur-md border-white/5 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:bg-slate-800/70">
+              <Card className="relative overflow-hidden bg-slate-800/50 backdrop-blur-md border-white/5 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:bg-slate-800/70" data-testid="metric-card">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -783,7 +786,7 @@ export function CarbonDashboard() {
         >
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl blur-xl" />
-            <TabsList className="grid w-full grid-cols-4 bg-slate-800/70 backdrop-blur-md border border-white/5 rounded-xl p-1">
+            <TabsList className="grid w-full grid-cols-6 bg-slate-800/70 backdrop-blur-md border border-white/5 rounded-xl p-1">
               <TabsTrigger
                 value="portfolio"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
@@ -799,6 +802,22 @@ export function CarbonDashboard() {
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden sm:inline">Intelligence Analytics</span>
                 <span className="sm:hidden">Analytics</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="retirement"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
+              >
+                <DollarSign className="w-4 h-4" />
+                <span className="hidden sm:inline">Retirement</span>
+                <span className="sm:hidden">Retirement</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="tokenization"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
+              >
+                <Coins className="w-4 h-4" />
+                <span className="hidden sm:inline">Tokenization</span>
+                <span className="sm:hidden">Tokens</span>
               </TabsTrigger>
               <TabsTrigger
                 value="explorer"
@@ -1551,6 +1570,16 @@ export function CarbonDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Retirement Tab */}
+          <TabsContent value="retirement" className="space-y-6">
+            <RetirementAnalytics />
+          </TabsContent>
+
+          {/* Tokenization Tab */}
+          <TabsContent value="tokenization" className="space-y-6">
+            <TokenizationMetrics />
           </TabsContent>
 
           {/* Compliance & Governance Tab */}

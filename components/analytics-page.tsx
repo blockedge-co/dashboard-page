@@ -35,6 +35,7 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts"
+import { RetirementAnalytics } from "@/components/retirement-panels/retirement-analytics"
 
 const marketData = [
   { month: "Jan", price: 45, volume: 120, sentiment: 72, prediction: 48 },
@@ -201,7 +202,7 @@ export function AnalyticsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl blur-xl" />
-            <TabsList className="grid w-full grid-cols-4 bg-slate-800/70 backdrop-blur-md border border-white/5 rounded-xl p-1">
+            <TabsList className="grid w-full grid-cols-5 bg-slate-800/70 backdrop-blur-md border border-white/5 rounded-xl p-1">
               <TabsTrigger
                 value="predictive"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
@@ -233,6 +234,14 @@ export function AnalyticsPage() {
                 <Activity className="w-4 h-4" />
                 <span className="hidden sm:inline">Risk Assessment</span>
                 <span className="sm:hidden">Risk</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="retirement"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
+              >
+                <PieChart className="w-4 h-4" />
+                <span className="hidden sm:inline">Retirement</span>
+                <span className="sm:hidden">Retirement</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -908,6 +917,11 @@ export function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Retirement Tab */}
+          <TabsContent value="retirement" className="space-y-6">
+            <RetirementAnalytics />
           </TabsContent>
         </Tabs>
       </motion.div>
