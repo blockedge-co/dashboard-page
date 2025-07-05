@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * DEPRECATED: This file is kept for compatibility only.
+ * Use tokenization-metrics-enhanced.tsx for real data integration.
+ * 
+ * This legacy component previously used mock data generation.
+ * All functionality has been moved to the enhanced version which
+ * connects to real blockchain data sources.
+ */
+
 import { useState, useEffect, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import {
@@ -112,55 +121,27 @@ interface StatusData {
   color: string;
 }
 
-// Mock data generation for tokenization metrics
-const generateTokenizationMetrics = (): TokenizationMetrics => {
-  const now = Date.now();
-  const dates = Array.from({ length: 30 }, (_, i) => {
-    const date = new Date(now - (29 - i) * 24 * 60 * 60 * 1000);
-    return date.toISOString().split('T')[0];
-  });
+// This file is deprecated - use tokenization-metrics-enhanced.tsx instead
+// Kept for compatibility but no longer contains mock data
 
+// Empty function to maintain compatibility
+const generateTokenizationMetrics = (): TokenizationMetrics => {
   return {
-    totalTokenized: "2,847,350",
-    tokenizationRate: 94.2,
-    averageProjectSize: "485,200",
-    successfulTokenizations: 127,
-    pendingTokenizations: 8,
-    failedTokenizations: 3,
-    tokenizationVelocity: 15420, // credits per day
-    costPerTokenization: 2.45,
-    timeToCompletion: 3.2,
-    qualityScore: 97.8,
-    regionalDistribution: [
-      { region: "Asia Pacific", value: 1245000, percentage: 43.7, projects: 34, color: "#10b981" },
-      { region: "Europe", value: 852000, percentage: 29.9, projects: 28, color: "#3b82f6" },
-      { region: "North America", value: 486000, percentage: 17.1, projects: 21, color: "#8b5cf6" },
-      { region: "Latin America", value: 164000, percentage: 5.8, projects: 12, color: "#f59e0b" },
-      { region: "Africa", value: 100350, percentage: 3.5, projects: 8, color: "#ef4444" },
-    ],
-    methodBreakdown: [
-      { method: "Blockchain Native", count: 78, percentage: 56.5, avgTime: 2.8, successRate: 98.7 },
-      { method: "Registry Bridge", count: 42, percentage: 30.4, avgTime: 4.1, successRate: 95.2 },
-      { method: "Manual Verification", count: 18, percentage: 13.1, avgTime: 7.5, successRate: 88.9 },
-    ],
-    trendsData: dates.map((date, i) => ({
-      date,
-      tokenized: 12000 + Math.sin(i / 5) * 3000 + Math.random() * 2000,
-      velocity: 14000 + Math.cos(i / 7) * 2500 + Math.random() * 1500,
-      quality: 95 + Math.sin(i / 3) * 3 + Math.random() * 2,
-      cost: 2.5 + Math.sin(i / 10) * 0.3 + Math.random() * 0.2,
-    })),
-    efficiencyData: [
-      { metric: "Processing Speed", current: 94.2, target: 98.0, improvement: 12.5 },
-      { metric: "Cost Efficiency", current: 87.8, target: 92.0, improvement: 8.3 },
-      { metric: "Quality Score", current: 97.8, target: 99.0, improvement: 5.2 },
-      { metric: "Automation Rate", current: 76.4, target: 85.0, improvement: 15.7 },
-    ],
-    statusData: [
-      { status: "Completed", count: 127, percentage: 92.0, color: "#10b981" },
-      { status: "In Progress", count: 8, percentage: 5.8, color: "#f59e0b" },
-      { status: "Failed", count: 3, percentage: 2.2, color: "#ef4444" },
-    ],
+    totalTokenized: "0",
+    tokenizationRate: 0,
+    averageProjectSize: "0",
+    successfulTokenizations: 0,
+    pendingTokenizations: 0,
+    failedTokenizations: 0,
+    tokenizationVelocity: 0,
+    costPerTokenization: 0,
+    timeToCompletion: 0,
+    qualityScore: 0,
+    regionalDistribution: [],
+    methodBreakdown: [],
+    trendsData: [],
+    efficiencyData: [],
+    statusData: [],
   };
 };
 
@@ -640,123 +621,23 @@ const QualityAndCostMetrics = memo(({ metrics }: { metrics: TokenizationMetrics 
   </div>
 ));
 
-// Main component
+// Main component - DEPRECATED: Use tokenization-metrics-enhanced.tsx instead
 export const TokenizationMetrics = memo(function TokenizationMetrics() {
-  const [metrics, setMetrics] = useState<TokenizationMetrics>(generateTokenizationMetrics());
-  const [activeView, setActiveView] = useState<"overview" | "advanced">("overview");
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(generateTokenizationMetrics());
-    }, 30000); // Update every 30 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleRefresh = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setMetrics(generateTokenizationMetrics());
-    setIsLoading(false);
-  };
-
+  // DEPRECATED: This component is replaced by tokenization-metrics-enhanced.tsx
+  // which uses real data services instead of simulated data.
+  
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Tokenization Metrics</h2>
-          <p className="text-slate-400">Comprehensive tracking of carbon credit tokenization performance</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex bg-slate-800/70 rounded-lg p-1 border border-slate-700">
-            <Button
-              variant={activeView === "overview" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveView("overview")}
-              className={activeView === "overview" ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white" : "text-slate-400 hover:text-white"}
-            >
-              Overview
-            </Button>
-            <Button
-              variant={activeView === "advanced" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveView("advanced")}
-              className={activeView === "advanced" ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white" : "text-slate-400 hover:text-white"}
-            >
-              Advanced
-            </Button>
-          </div>
-          <Button
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh Data
-          </Button>
-        </div>
+    <div className="flex items-center justify-center h-64 bg-slate-800/50 rounded-lg border border-slate-700">
+      <div className="text-center">
+        <h3 className="text-xl font-bold text-white mb-2">Component Deprecated</h3>
+        <p className="text-slate-400 mb-4">
+          This component has been replaced by tokenization-metrics-enhanced.tsx
+        </p>
+        <p className="text-slate-500 text-sm">
+          Please use the enhanced version for real data integration.
+        </p>
       </div>
-
-      {/* Content based on active view */}
-      {activeView === "overview" ? (
-        <>
-          {/* Overview Cards */}
-          <TokenizationOverviewCard metrics={metrics} />
-
-          {/* Main Analytics Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <TokenizationVelocityChart data={metrics.trendsData} />
-            <RegionalDistributionChart data={metrics.regionalDistribution} />
-          </div>
-
-          {/* Method Analysis and Efficiency */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <TokenizationMethodBreakdown data={metrics.methodBreakdown} />
-            <EfficiencyMetricsPanel data={metrics.efficiencyData} />
-          </div>
-
-          {/* Quality and Cost Metrics */}
-          <QualityAndCostMetrics metrics={metrics} />
-        </>
-      ) : (
-        <AdvancedTokenizationAnalytics />
-      )}
-
-      {/* Real-time Status Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="fixed bottom-4 right-4 z-50"
-      >
-        <div className="bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-lg p-3 shadow-xl">
-          <div className="flex items-center gap-2">
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.7, 1, 0.7],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="w-2 h-2 bg-emerald-400 rounded-full"
-            />
-            <span className="text-slate-300 text-sm">Live Data</span>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+    </div>
   );
 });
 

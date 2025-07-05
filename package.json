@@ -8,7 +8,19 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "verify-production": "node -e \"console.log('✅ Production configuration verified'); process.env.NEXT_PUBLIC_PROJECTS_DATA_URL ? console.log('✅ Data URL configured') : (console.error('❌ NEXT_PUBLIC_PROJECTS_DATA_URL not set'), process.exit(1))\""
+    "verify-production": "node verify-production-fixes.js",
+    "verify-env": "node -e \"console.log('✅ Production configuration verified'); process.env.NEXT_PUBLIC_PROJECTS_DATA_URL ? console.log('✅ Data URL configured') : (console.error('❌ NEXT_PUBLIC_PROJECTS_DATA_URL not set'), process.exit(1))\"",
+    "test-mobile": "npm run build && echo '📱 Mobile testing: Test responsive design manually on various device sizes'",
+    "test-accessibility": "echo '♿ Accessibility testing: Use screen readers and keyboard-only navigation to test'",
+    "mobile:test": "node __tests__/mobile-layout-verification.test.js",
+    "mobile:test-components": "jest __tests__/mobile-component-verification.test.tsx",
+    "mobile:screenshots": "node __tests__/mobile-screenshot-comparison.js compare",
+    "mobile:baseline": "node __tests__/mobile-screenshot-comparison.js baseline",
+    "mobile:update-baseline": "node __tests__/mobile-screenshot-comparison.js baseline",
+    "mobile:report": "node __tests__/mobile-screenshot-comparison.js report",
+    "mobile:verify-all": "node __tests__/run-mobile-tests.js",
+    "mobile:verify-quick": "node __tests__/run-mobile-tests.js --skip-screenshots",
+    "production-ready": "npm run type-check && npm run lint && npm run verify-production && npm run build"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -64,10 +76,17 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/jest": "^29.5.8",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8.5",
+    "puppeteer": "^21.6.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }

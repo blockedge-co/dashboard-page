@@ -11,6 +11,14 @@
 /playwright-report
 /playwright/.cache
 
+# mobile testing artifacts
+__tests__/screenshots/current/
+__tests__/screenshots/diff/
+__tests__/mobile-test-results.json
+__tests__/mobile-layout-test-results.json
+__tests__/detailed-layout-report.json
+__tests__/comparison-results.json
+
 # next.js
 /.next/
 /out/

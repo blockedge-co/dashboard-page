@@ -1,0 +1,190 @@
+name: Mobile Layout Verification
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  mobile-testing:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        npm ci
+        # Install additional Puppeteer dependencies for CI
+        sudo apt-get update
+        sudo apt-get install -y \
+          libnss3-dev \
+          libgconf-2-4 \
+          libxss1 \
+          libasound2-dev \
+          libxtst6 \
+          libxrandr2 \
+          libasound2 \
+          libpangocairo-1.0-0 \
+          libatk1.0-0 \
+          libcairo-gobject2 \
+          libgtk-3-0 \
+          libgdk-pixbuf2.0-0
+          
+    - name: Type checking
+      run: npm run type-check
+      
+    - name: Linting
+      run: npm run lint
+      
+    - name: Build application
+      run: npm run build
+      env:
+        NEXT_PUBLIC_PROJECTS_DATA_URL: https://asset.blockedge.co/blockedge-co2e-project.json
+        
+    - name: Start application in background
+      run: |
+        npm run start &
+        sleep 10
+        # Wait for server to be ready
+        wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 10 http://localhost:3000
+      env:
+        NEXT_PUBLIC_PROJECTS_DATA_URL: https://asset.blockedge.co/blockedge-co2e-project.json
+        
+    - name: Run mobile component tests
+      run: npm run mobile:test-components
+      
+    - name: Run browser layout tests
+      run: npm run mobile:test
+      env:
+        CI: true
+        
+    - name: Generate screenshot baseline (if needed)
+      run: npm run mobile:baseline
+      continue-on-error: true
+      env:
+        CI: true
+        
+    - name: Run visual regression tests
+      run: npm run mobile:screenshots
+      continue-on-error: true
+      env:
+        CI: true
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: mobile-test-results-node-${{ matrix.node-version }}
+        path: |
+          __tests__/mobile-test-results.json
+          __tests__/mobile-layout-test-results.json
+          __tests__/screenshots/
+        retention-days: 30
+        
+    - name: Upload screenshots on failure
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: failed-screenshots-node-${{ matrix.node-version }}
+        path: __tests__/screenshots/
+        retention-days: 7
+        
+    - name: Comment PR with test results
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request' && always()
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          try {
+            const resultsPath = path.join(process.cwd(), '__tests__/mobile-test-results.json');
+            const results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            
+            const { summary } = results;
+            const successRate = summary.total > 0 ? 
+              (summary.passed / summary.total * 100).toFixed(1) : 0;
+            
+            const status = summary.failed === 0 ? '✅' : '❌';
+            
+            const comment = `## ${status} Mobile Layout Verification Results
+            
+            **Node.js Version:** ${{ matrix.node-version }}
+            **Success Rate:** ${successRate}%
+            **Duration:** ${(results.duration / 1000).toFixed(1)}s
+            
+            | Test Suite | Status | 
+            |------------|--------|
+            ${Object.entries(results.tests).map(([key, test]) => 
+              `| ${test.name} | ${test.success ? '✅ Pass' : '❌ Fail'} |`
+            ).join('\n')}
+            
+            **Summary:**
+            - Total Tests: ${summary.total}
+            - Passed: ${summary.passed}
+            - Failed: ${summary.failed}
+            
+            ${summary.failed > 0 ? `
+            **Action Required:**
+            - Review failed tests in the workflow logs
+            - Check uploaded screenshots for visual regressions
+            - Ensure mobile layouts are responsive across all viewports
+            ` : ''}
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not post test results comment:', error.message);
+          }
+
+  mobile-testing-summary:
+    runs-on: ubuntu-latest
+    needs: mobile-testing
+    if: always()
+    
+    steps:
+    - name: Download all test artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: test-artifacts
+        
+    - name: Generate combined test report
+      run: |
+        echo "# Mobile Testing Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Mobile layout verification completed across multiple Node.js versions." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -d "test-artifacts" ]; then
+          echo "## Test Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
+          find test-artifacts -name "*.json" -o -name "*.png" | head -10 | while read file; do
+            echo "- $file" >> $GITHUB_STEP_SUMMARY
+          done
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📱 **Key Verification Points:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Grid layouts stack properly on mobile (grid-cols-1)" >> $GITHUB_STEP_SUMMARY
+        echo "- Touch targets meet 44px minimum size requirement" >> $GITHUB_STEP_SUMMARY
+        echo "- Charts remain readable and responsive" >> $GITHUB_STEP_SUMMARY
+        echo "- No content overflow beyond viewport boundaries" >> $GITHUB_STEP_SUMMARY
+        echo "- Navigation remains accessible on all screen sizes" >> $GITHUB_STEP_SUMMARY

@@ -76,8 +76,9 @@ import {
   LoadingMetric,
   LoadingSkeleton,
 } from "./loading-skeleton";
-import { RetirementAnalytics } from "./retirement-panels/retirement-analytics";
-import { TokenizationMetrics } from "./tokenization-metrics-enhanced";
+import { LazyRetirement, LazyTokenization } from "./lazy-components";
+import { ResponsiveNavigation } from "./responsive-navigation";
+import { ErrorBoundaryWrapper } from "./error-boundary";
 
 export function CarbonDashboard() {
   const [activeTab, setActiveTab] = useState("portfolio");
@@ -376,29 +377,12 @@ export function CarbonDashboard() {
     return () => clearInterval(interval);
   }, [realData.heroMetrics, shouldReduceAnimations]);
 
-  // Simulate real-time data updates with CO2e chain data (optimized)
+  // Get real market data from CO2e chain (no simulation)
   const [marketDataState, setMarketDataState] = useState(
     co2eApi.generateMarketData()
   );
 
-  useEffect(() => {
-    if (shouldReduceAnimations) {
-      // Skip real-time updates on slower devices
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setMarketDataState((prevData) => {
-        return prevData.map((item) => ({
-          ...item,
-          price: item.price * (1 + (Math.random() * 0.02 - 0.01)),
-          volume: item.volume * (1 + (Math.random() * 0.03 - 0.015)),
-        }));
-      });
-    }, 5000); // Slower updates for better performance
-
-    return () => clearInterval(interval);
-  }, [shouldReduceAnimations]);
+  // Real market data is fetched once and cached - no simulation needed
 
   // 3D card effect refs
   const card1Ref = useRef(null);
@@ -432,17 +416,17 @@ export function CarbonDashboard() {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 space-y-8" data-testid="dashboard-container">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8" data-testid="dashboard-container">
       {/* Hero Metrics */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
           CO2e Chain Dashboard
         </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {realData.heroMetrics.map((metric, index) => (
             <motion.div
               key={index}
@@ -465,13 +449,13 @@ export function CarbonDashboard() {
             >
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-70" />
               <Card className="relative overflow-hidden bg-slate-800/50 backdrop-blur-md border-white/5 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:bg-slate-800/70" data-testid="metric-card">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-slate-400">
+                      <p className="text-xs sm:text-sm font-medium text-slate-400">
                         {metric.title}
                       </p>
-                      <div className="h-8 flex items-end">
+                      <div className="h-6 sm:h-8 flex items-end">
                         {isLoading || !dataLoaded ? (
                           <LoadingText text="Loading..." />
                         ) : (
@@ -482,7 +466,7 @@ export function CarbonDashboard() {
                               duration: 0.5,
                               delay: 0.2 + index * 0.1,
                             }}
-                            className="text-3xl font-bold text-white"
+                            className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
                           >
                             {animatedMetrics[index] === 100
                               ? metric.value
@@ -517,9 +501,9 @@ export function CarbonDashboard() {
                     </div>
                     <div className="relative">
                       <div
-                        className={`w-12 h-12 rounded-full bg-gradient-to-r ${metric.color} flex items-center justify-center shadow-lg`}
+                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r ${metric.color} flex items-center justify-center shadow-lg`}
                       >
-                        <metric.icon className="w-6 h-6 text-white" />
+                        <metric.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                       </div>
                       {metric.pulse && (
                         <motion.div
@@ -773,75 +757,23 @@ export function CarbonDashboard() {
         </Card>
       </motion.div>
 
-      {/* Main Navigation Tabs */}
+      {/* Main Navigation */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl blur-xl" />
-            <TabsList className="grid w-full grid-cols-6 bg-slate-800/70 backdrop-blur-md border border-white/5 rounded-xl p-1">
-              <TabsTrigger
-                value="portfolio"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
-              >
-                <Globe className="w-4 h-4" />
-                <span className="hidden sm:inline">Global Portfolio</span>
-                <span className="sm:hidden">Portfolio</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="analytics"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Intelligence Analytics</span>
-                <span className="sm:hidden">Analytics</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="retirement"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
-              >
-                <DollarSign className="w-4 h-4" />
-                <span className="hidden sm:inline">Retirement</span>
-                <span className="sm:hidden">Retirement</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="tokenization"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
-              >
-                <Coins className="w-4 h-4" />
-                <span className="hidden sm:inline">Tokenization</span>
-                <span className="sm:hidden">Tokens</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="explorer"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
-              >
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">Institutional Explorer</span>
-                <span className="sm:hidden">Explorer</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="compliance"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg"
-              >
-                <Shield className="w-4 h-4" />
-                <span className="hidden sm:inline">
-                  Compliance & Governance
-                </span>
-                <span className="sm:hidden">Compliance</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        <ResponsiveNavigation 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          className="mb-6"
+        />
+        
+        <div className="space-y-6">
 
           {/* Global Portfolio Tab */}
-          <TabsContent value="portfolio" className="space-y-6">
+          {activeTab === "portfolio" && (
+          <div className="space-y-6">
             <Card className="bg-slate-800/50 backdrop-blur-md border-white/5 shadow-xl overflow-hidden">
               <CardHeader className="border-b border-slate-700/50">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -860,7 +792,7 @@ export function CarbonDashboard() {
                       value={selectedFilter}
                       onValueChange={setSelectedFilter}
                     >
-                      <SelectTrigger className="w-48 bg-slate-900/80 border-slate-700 text-slate-300">
+                      <SelectTrigger className="w-full sm:w-48 min-h-[44px] bg-slate-900/80 border-slate-700 text-slate-300 touch-manipulation">
                         <SelectValue placeholder="Filter projects" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-700 text-slate-300">
@@ -880,7 +812,7 @@ export function CarbonDashboard() {
                       value={selectedRegistry}
                       onValueChange={setSelectedRegistry}
                     >
-                      <SelectTrigger className="w-48 bg-slate-900/80 border-slate-700 text-slate-300">
+                      <SelectTrigger className="w-full sm:w-48 min-h-[44px] bg-slate-900/80 border-slate-700 text-slate-300 touch-manipulation">
                         <SelectValue placeholder="Filter by registry" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-700 text-slate-300">
@@ -894,14 +826,16 @@ export function CarbonDashboard() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
+                      className="border-slate-700 text-slate-300 hover:bg-slate-700/50 touch-manipulation"
+                      aria-label="Filter options"
                     >
                       <Filter className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-slate-700 text-slate-300 hover:bg-slate-700/50"
+                      className="border-slate-700 text-slate-300 hover:bg-slate-700/50 touch-manipulation"
+                      aria-label="Download data"
                     >
                       <Download className="w-4 h-4" />
                     </Button>
@@ -959,10 +893,12 @@ export function CarbonDashboard() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+          )}
 
           {/* Intelligence Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
+          {activeTab === "analytics" && (
+          <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="bg-slate-800/50 backdrop-blur-md border-white/5 shadow-xl overflow-hidden">
                 <CardHeader className="border-b border-slate-700/50">
@@ -1338,10 +1274,12 @@ export function CarbonDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+          )}
 
           {/* Institutional Explorer Tab */}
-          <TabsContent value="explorer" className="space-y-6">
+          {activeTab === "explorer" && (
+          <div className="space-y-6">
             <Card className="bg-slate-800/50 backdrop-blur-md border-white/5 shadow-xl overflow-hidden">
               <CardHeader className="border-b border-slate-700/50">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1359,7 +1297,8 @@ export function CarbonDashboard() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                       <Input
                         placeholder="Search transactions, companies, or projects..."
-                        className="w-full sm:w-80 pl-9 bg-slate-900/80 border-slate-700 text-slate-300 focus:border-emerald-500"
+                        className="w-full sm:w-80 min-h-[44px] pl-9 bg-slate-900/80 border-slate-700 text-slate-300 focus:border-emerald-500 touch-manipulation"
+                        aria-label="Search transactions, companies, or projects"
                       />
                     </div>
                     <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700">
@@ -1570,20 +1509,26 @@ export function CarbonDashboard() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </div>
+          )}
 
           {/* Retirement Tab */}
-          <TabsContent value="retirement" className="space-y-6">
-            <RetirementAnalytics />
-          </TabsContent>
+          {activeTab === "retirement" && (
+            <ErrorBoundaryWrapper name="Retirement Analytics">
+              <LazyRetirement />
+            </ErrorBoundaryWrapper>
+          )}
 
           {/* Tokenization Tab */}
-          <TabsContent value="tokenization" className="space-y-6">
-            <TokenizationMetrics />
-          </TabsContent>
+          {activeTab === "tokenization" && (
+            <ErrorBoundaryWrapper name="Tokenization Metrics">
+              <LazyTokenization />
+            </ErrorBoundaryWrapper>
+          )}
 
           {/* Compliance & Governance Tab */}
-          <TabsContent value="compliance" className="space-y-6">
+          {activeTab === "compliance" && (
+          <div className="space-y-6">
             <Card className="bg-slate-800/50 backdrop-blur-md border-white/5 shadow-xl overflow-hidden">
               <CardHeader className="border-b border-slate-700/50">
                 <CardTitle className="flex items-center gap-2 text-white">
@@ -1785,23 +1730,24 @@ export function CarbonDashboard() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+          )}
+        </div>
       </motion.div>
 
       {/* Project Details Modal */}
       {showProjectDetails && selectedProject && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-700"
+            className="bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border border-slate-700"
           >
             {/* Header */}
-            <div className="p-6 border-b border-slate-700 flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-2">
+            <div className="p-4 sm:p-6 border-b border-slate-700 flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 truncate">
                   {selectedProject.name}
                 </h2>
                 <div className="flex items-center gap-2 mb-2">
@@ -1831,7 +1777,7 @@ export function CarbonDashboard() {
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Project Location */}
               <div className="flex items-center gap-2 p-4 bg-slate-700/50 rounded-lg">
                 <MapPin className="w-4 h-4 text-emerald-400" />
@@ -1852,7 +1798,7 @@ export function CarbonDashboard() {
               </div>
 
               {/* Key Metrics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Current Supply</div>
                   <div className="text-xl font-bold text-white">
@@ -1877,7 +1823,7 @@ export function CarbonDashboard() {
               </div>
 
               {/* Project Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-white">
                     Project Information
