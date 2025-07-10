@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, TrendingUp, RefreshCw, BarChart3, DollarSign, Leaf, Users, Globe } from 'lucide-react';
 import { EnhancedMetricCard } from './enhanced-metric-card';
-import { MetricCards } from './metric-cards';
-import { ProjectDataManager } from '@/lib/project-data-manager';
+import { MetricGrid } from './metric-cards';
+import { co2eApi } from '@/lib/co2e-api';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -29,7 +29,7 @@ export function ComprehensiveDashboard({ className }: ComprehensiveDashboardProp
   const loadData = async () => {
     try {
       setIsRefreshing(true);
-      const data = await ProjectDataManager.getProjects();
+      const data = await co2eApi.getProjects();
       setProjects(data || []);
       setLastRefresh(new Date());
     } catch (error) {
@@ -205,7 +205,7 @@ export function ComprehensiveDashboard({ className }: ComprehensiveDashboardProp
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <MetricCards projects={projects} />
+                <MetricGrid metrics={[]} />
               </CardContent>
             </Card>
           </motion.div>

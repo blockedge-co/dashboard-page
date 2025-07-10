@@ -5,7 +5,7 @@ import { BarChart3, Leaf, TrendingUp } from "lucide-react";
 
 export const mapProjectToMetricCard = (project: ProjectData): MetricCardProps => ({
   title: project.name,
-  value: project.totalCreditsIssued?.toString() || "0",
+  value: project.totalSupply || "0",
   change: "N/A",
   trend: "up" as const,
   icon: Leaf,

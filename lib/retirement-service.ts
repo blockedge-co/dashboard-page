@@ -408,8 +408,8 @@ class RetirementService {
             methodologyRetirements[project.methodology].count += stats.retirementCount;
 
             // Add recent retirements
-            const projectRetirements = this.generateRetirementTransactions(project, stats, 5);
-            recentRetirements.push(...projectRetirements);
+            const projectTransactions = this.generateRetirementTransactions(project, stats, 5);
+            recentRetirements.push(...projectTransactions);
           }
         } catch (error) {
           console.warn(`⚠️ Error processing project ${project.id}:`, error);

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { mapProjectsToMetricCards } from '../lib/mappers';
 import { MetricGrid } from './metric-cards';
 import { projectDataManager } from '../lib/project-data-manager';
+import { co2eApi } from '../lib/co2e-api';
 import { Button } from './ui/button';
 import { RealTimeRetirementStats } from './retirement-panels/real-time-stats';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -55,7 +56,7 @@ export function GrafanaDashboard({ className }: GrafanaDashboardProps) {
       if (!projectDataManager.isReady()) {
         projectDataManager.initialize(process.env.NEXT_PUBLIC_PROJECTS_DATA_URL || '');
       }
-      const projectData = await projectDataManager.getProjects();
+      const projectData = await co2eApi.getProjects();
       if (!projectData || projectData.length === 0) {
         throw new Error('No project data available');
       }

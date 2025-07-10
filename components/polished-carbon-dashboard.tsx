@@ -223,7 +223,7 @@ const OptimizedChart = memo(function OptimizedChart({
   return (
     <ChartContainer config={config} className={className}>
       <ResponsiveContainer width="100%" height={height}>
-        {children}
+        {children as React.ReactElement}
       </ResponsiveContainer>
     </ChartContainer>
   );
@@ -235,7 +235,7 @@ const PerformanceIndicator = memo(() => {
     fps: 60,
     memory: 45,
     cpu: 23,
-    network: 'online' as const
+    network: 'online' as 'online' | 'warning'
   });
 
   useEffect(() => {

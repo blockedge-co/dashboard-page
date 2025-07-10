@@ -22,7 +22,7 @@ export const LazyProjectCard = lazy(() =>
 );
 
 export const LazyAnalyticsPage = lazy(() => 
-  import("./analytics-page")
+  import("./analytics-page").then(module => ({ default: module as any }))
 );
 
 // Loading fallbacks with proper sizing

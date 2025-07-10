@@ -123,7 +123,13 @@ export class EnhancedMockGenerator {
     const paymentTransactions = this.generatePaymentTransactions(retirements);
     
     // Aggregate by payment method
-    const aggregated = {
+    const aggregated: Record<string, { 
+      transactions: PaymentMethodTransaction[]; 
+      amount: number; 
+      co2eAmount: number; 
+      count: number; 
+      fees: number; 
+    }> = {
       aisPoint: { transactions: [], amount: 0, co2eAmount: 0, count: 0, fees: 0 },
       fiat: { transactions: [], amount: 0, co2eAmount: 0, count: 0, fees: 0 },
       crypto: { transactions: [], amount: 0, co2eAmount: 0, count: 0, fees: 0 },

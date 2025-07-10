@@ -482,7 +482,8 @@ export function EnhancedGrafanaDashboard() {
 
   return (
     <div className="h-screen bg-slate-900 overflow-hidden">
-      <GrafanaDashboard>
+      <GrafanaDashboard className="grafana-dashboard" />
+      <div className="grid grid-cols-12 gap-4 p-4">
         {currentPanels.map((panel: any, index: number) => {
           const PanelComponent = panel.component;
           return (
@@ -497,7 +498,7 @@ export function EnhancedGrafanaDashboard() {
             </motion.div>
           );
         })}
-      </GrafanaDashboard>
+      </div>
     </div>
   );
 }

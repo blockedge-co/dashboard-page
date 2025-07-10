@@ -151,7 +151,7 @@ class TokenizationService {
               name: tokenData.name || project.tokenName,
               symbol: tokenData.symbol || project.tokenSymbol,
               totalSupply: tokenData.totalSupply || "0",
-              decimals: parseInt(tokenData.decimals) || 18,
+              decimals: parseInt(tokenData.decimals || "18") || 18,
               holders: tokenData.holders || 0,
               transfers: tokenData.transfers || 0,
               priceUSD,

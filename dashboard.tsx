@@ -82,7 +82,7 @@ const marketData = [
   { month: "Jun", price: 67, volume: 200, sentiment: 88 },
 ]
 
-const projects = [
+const projects: any[] = [
 
 ]
 
@@ -375,7 +375,7 @@ export default function BlockedgeDashboard() {
                         <div>
                           <span className="text-sm text-slate-500">Compliance</span>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {project.compliance.map((badge) => (
+                            {project.compliance.map((badge: string) => (
                               <Badge key={badge} variant="secondary" className="text-xs">
                                 {badge}
                               </Badge>

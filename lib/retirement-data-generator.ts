@@ -13,6 +13,7 @@ import type {
   CO2eAmount,
   ContractAddress,
   TransactionHash,
+  PaymentMethod,
 } from "./types";
 import type { ProjectData } from "./co2e-api";
 
@@ -131,10 +132,123 @@ export class RetirementDataGenerator {
         },
       },
       byPaymentMethod: {
-        aisPoint: { count: 0, amount: '0', co2eAmount: '0', percentage: 0 },
-        fiat: { count: 0, amount: '0', co2eAmount: '0', percentage: 0 },
-        crypto: { count: 0, amount: '0', co2eAmount: '0', percentage: 0 },
-        other: { count: 0, amount: '0', co2eAmount: '0', percentage: 0 },
+        ais_points: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        fiat_usd: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        fiat_eur: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        fiat_other: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        crypto_eth: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        crypto_btc: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        crypto_usdc: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        crypto_usdt: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        crypto_other: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        bank_transfer: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        credit_card: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        paypal: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
+        other: { 
+          count: 0, 
+          amount: '0', 
+          co2eAmount: '0', 
+          usdValue: '0',
+          percentage: 0, 
+          averageAmount: '0',
+          trend: { growthRate: 0, changeFromPrevious: 0 }
+        },
       },
       trends: this.calculateTrends(retirements, avgPrice),
     };
@@ -450,6 +564,7 @@ export class RetirementDataGenerator {
         method: this.getPaymentMethod(projectHash),
         amount: (amount * parseFloat(project.pricing.currentPrice || '40')).toFixed(2),
         currency: 'USD',
+        usdValue: (amount * parseFloat(project.pricing.currentPrice || '40')).toFixed(2),
         transactionId: `pay_${transactionHash.slice(0, 8)}`,
       },
       createdAt: retirementDate.toISOString(),
@@ -650,8 +765,8 @@ export class RetirementDataGenerator {
     return address;
   }
 
-  private getPaymentMethod(seed: number): string {
-    const methods = ['aisPoint', 'fiat', 'crypto', 'other'];
+  private getPaymentMethod(seed: number): PaymentMethod {
+    const methods: PaymentMethod[] = ['ais_points', 'fiat_usd', 'crypto_eth', 'crypto_usdc', 'credit_card', 'bank_transfer', 'other'];
     const index = Math.floor(this.seededRandom(seed) * methods.length);
     return methods[index];
   }

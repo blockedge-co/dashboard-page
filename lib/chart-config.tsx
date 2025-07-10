@@ -171,12 +171,13 @@ export const renderChartGradients = (gradients: (keyof typeof chartGradients)[])
 
 // Helper function to get chart container class with responsive behavior
 export const getChartContainerClass = (
-  aspectRatio: "video" | "square" | "portrait" = "video"
+  aspectRatio: "video" | "square" | "portrait" | "compact" = "video"
 ) => {
   const aspectMap = {
     video: "aspect-video sm:aspect-video", // 16:9
     square: "aspect-square", // 1:1
     portrait: "aspect-[3/4]", // 3:4
+    compact: "aspect-[2/1]", // 2:1 for compact view
   };
 
   return `w-full ${aspectMap[aspectRatio]} min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]`;

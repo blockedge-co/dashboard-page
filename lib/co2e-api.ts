@@ -1238,7 +1238,7 @@ class Co2eApiService {
     if (isRenewableEnergy) baseSupply *= 2; // 200K for renewable energy
 
     // Add variation based on project name hash for consistency
-    const projectHash = project.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const projectHash = project.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     const variation = (projectHash % 100000) - 50000; // ±50K variation
     const totalSupply = Math.max(50000, baseSupply + variation);
 

@@ -285,18 +285,21 @@ export function GrafanaDashboardDemo() {
 
   // Custom dashboard with the panels rendered as children
   return (
-    <GrafanaDashboard>
-      {panels.map((panel) => {
-        const PanelComponent = panel.component;
-        return (
-          <div
-            key={panel.id}
-            className={`col-span-${panel.position.w} row-span-${panel.position.h}`}
-          >
-            <PanelComponent {...panel.props} />
-          </div>
-        );
-      })}
-    </GrafanaDashboard>
+    <div>
+      <GrafanaDashboard className="grafana-dashboard" />
+      <div className="grid grid-cols-12 gap-4 p-4">
+        {panels.map((panel) => {
+          const PanelComponent = panel.component;
+          return (
+            <div
+              key={panel.id}
+              className={`col-span-${panel.position.w} row-span-${panel.position.h}`}
+            >
+              <PanelComponent {...panel.props} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

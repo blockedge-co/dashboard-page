@@ -7,8 +7,10 @@ import type {
   RetirementStats, 
   MarketData,
   AggregationOptions,
-  TimeSeries 
+  TimeSeries,
+  PaymentMethod 
 } from "./types";
+import { PAYMENT_METHODS } from "./types";
 
 export interface AggregationResult<T = any> {
   data: T;
@@ -394,6 +396,7 @@ export class DataAggregationEngine {
       },
       byProject: this.aggregateByProject(retirements),
       byRetirer: this.aggregateByRetirer(retirements),
+      byPaymentMethod: this.aggregateByPaymentMethod(retirements, totalValue),
       byTimeframe: this.aggregateByTimeframe(retirements),
       byMethodology: this.aggregateByMethodology(retirements),
       trends: this.calculateTrends(retirements)
@@ -757,6 +760,68 @@ export class DataAggregationEngine {
     return byMethodology;
   }
 
+  private createEmptyPaymentMethodRecord(): Record<PaymentMethod, any> {
+    const emptyRecord: Record<PaymentMethod, any> = {} as any;
+    
+    Object.values(PAYMENT_METHODS).forEach(method => {
+      emptyRecord[method as PaymentMethod] = {
+        count: 0,
+        amount: '0',
+        co2eAmount: '0',
+        usdValue: '0',
+        percentage: 0,
+        averageAmount: '0',
+        trend: {
+          growthRate: 0,
+          changeFromPrevious: 0
+        }
+      };
+    });
+    
+    return emptyRecord;
+  }
+
+  private aggregateByPaymentMethod(retirements: RetirementTransaction[], totalValue: number): Record<string, any> {
+    const byPaymentMethod: Record<string, any> = {};
+    
+    for (const retirement of retirements) {
+      const method = retirement.payment.method;
+      const amount = parseInt(retirement.amount);
+      const co2eAmount = parseInt(retirement.amountCO2e);
+      const usdValue = parseFloat(retirement.payment.usdValue);
+      
+      if (!byPaymentMethod[method]) {
+        byPaymentMethod[method] = {
+          count: 0,
+          amount: '0',
+          co2eAmount: '0',
+          usdValue: '0',
+          percentage: 0,
+          averageAmount: '0',
+          trend: {
+            growthRate: 0,
+            changeFromPrevious: 0
+          }
+        };
+      }
+      
+      const methodData = byPaymentMethod[method];
+      methodData.count++;
+      methodData.amount = (parseInt(methodData.amount) + amount).toString();
+      methodData.co2eAmount = (parseInt(methodData.co2eAmount) + co2eAmount).toString();
+      methodData.usdValue = (parseFloat(methodData.usdValue) + usdValue).toFixed(2);
+    }
+    
+    // Calculate percentages and averages
+    for (const method in byPaymentMethod) {
+      const methodData = byPaymentMethod[method];
+      methodData.percentage = totalValue > 0 ? parseFloat(((parseFloat(methodData.usdValue) / totalValue) * 100).toFixed(2)) : 0;
+      methodData.averageAmount = methodData.count > 0 ? Math.floor(parseInt(methodData.amount) / methodData.count).toString() : '0';
+    }
+    
+    return byPaymentMethod;
+  }
+
   private calculateTrends(retirements: RetirementTransaction[]): any {
     if (retirements.length < 2) {
       return { growthRate: 0, averageRetirement: '0', topRetirers: [] };
@@ -892,6 +957,7 @@ export class DataAggregationEngine {
       },
       byProject: Object.fromEntries(aggregators.byProject),
       byRetirer: Object.fromEntries(aggregators.byRetirer),
+      byPaymentMethod: aggregators.byPaymentMethod || this.createEmptyPaymentMethodRecord(),
       byTimeframe: {
         daily: Array.from(aggregators.byTimeframe.daily.values()),
         monthly: Array.from(aggregators.byTimeframe.monthly.values()),
@@ -901,7 +967,13 @@ export class DataAggregationEngine {
       trends: {
         growthRate: 0,
         averageRetirement: total.count > 0 ? (total.co2eAmount / total.count).toString() : '0',
-        topRetirers: []
+        topRetirers: [],
+        paymentMethodTrends: {
+          mostPopular: 'ais_points' as any,
+          fastestGrowing: 'ais_points' as any,
+          aisPointsUsage: { percentage: 0, trend: 0 },
+          cryptoAdoption: { percentage: 0, trend: 0 }
+        }
       }
     };
   }
@@ -912,9 +984,20 @@ export class DataAggregationEngine {
       total: { count: 0, amount: '0', co2eAmount: '0', value: '0' },
       byProject: {},
       byRetirer: {},
+      byPaymentMethod: this.createEmptyPaymentMethodRecord(),
       byTimeframe: { daily: [], monthly: [], yearly: [] },
       byMethodology: {},
-      trends: { growthRate: 0, averageRetirement: '0', topRetirers: [] }
+      trends: { 
+        growthRate: 0, 
+        averageRetirement: '0', 
+        topRetirers: [],
+        paymentMethodTrends: {
+          mostPopular: 'ais_points' as any,
+          fastestGrowing: 'ais_points' as any,
+          aisPointsUsage: { percentage: 0, trend: 0 },
+          cryptoAdoption: { percentage: 0, trend: 0 }
+        }
+      }
     };
     
     for (const result of results) {
@@ -926,15 +1009,16 @@ export class DataAggregationEngine {
       // Merge other aggregations
       Object.assign(merged.byProject, result.byProject);
       Object.assign(merged.byRetirer, result.byRetirer);
+      Object.assign(merged.byPaymentMethod, result.byPaymentMethod || {});
       Object.assign(merged.byMethodology, result.byMethodology);
     }
     
     return merged;
   }
 
-  private processBatch(batch: any[], options: AggregationOptions): RetirementStats {
+  private async processBatch(batch: any[], options: AggregationOptions): Promise<RetirementStats> {
     // Process a batch of retirement transactions
-    return this.directAggregateRetirements(batch, options);
+    return await this.directAggregateRetirements(batch, options);
   }
 
   private processProjectChunk(chunk: ProjectData[], aggregators: any): void {

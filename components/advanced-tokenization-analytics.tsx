@@ -380,8 +380,8 @@ const CostAnalysisChart = memo(({ data }: { data: CostAnalysisData[] }) => (
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar yAxisId="cost" dataKey="operationalCost" stackId="a" fill={getChartColor("blue")} name="Operational" />
-              <Bar yAxisId="cost" dataKey="complianceCost" stackId="a" fill={getChartColor("purple")} name="Compliance" />
-              <Bar yAxisId="cost" dataKey="technologyCost" stackId="a" fill={getChartColor("orange")} name="Technology" />
+              <Bar yAxisId="cost" dataKey="complianceCost" stackId="a" fill={getChartColor("violet")} name="Compliance" />
+              <Bar yAxisId="cost" dataKey="technologyCost" stackId="a" fill={getChartColor("indigo")} name="Technology" />
               <Line yAxisId="roi" type="monotone" dataKey="roi" stroke={getChartColor("emerald")} strokeWidth={3} name="ROI %" />
             </ComposedChart>
           </ResponsiveContainer>
@@ -434,9 +434,9 @@ const QualityTrendsChart = memo(({ data }: { data: QualityTrendData[] }) => (
               <ChartTooltip content={<ChartTooltipContent />} />
               <Line type="monotone" dataKey="overallQuality" stroke={getChartColor("emerald")} strokeWidth={3} dot={{ r: 3 }} />
               <Line type="monotone" dataKey="dataAccuracy" stroke={getChartColor("blue")} strokeWidth={2} dot={{ r: 2 }} />
-              <Line type="monotone" dataKey="processCompliance" stroke={getChartColor("purple")} strokeWidth={2} dot={{ r: 2 }} />
-              <Line type="monotone" dataKey="verificationScore" stroke={getChartColor("orange")} strokeWidth={2} dot={{ r: 2 }} />
-              <Line type="monotone" dataKey="customerSatisfaction" stroke={getChartColor("red")} strokeWidth={2} dot={{ r: 2 }} />
+              <Line type="monotone" dataKey="processCompliance" stroke={getChartColor("violet")} strokeWidth={2} dot={{ r: 2 }} />
+              <Line type="monotone" dataKey="verificationScore" stroke={getChartColor("sky")} strokeWidth={2} dot={{ r: 2 }} />
+              <Line type="monotone" dataKey="customerSatisfaction" stroke={getChartColor("teal")} strokeWidth={2} dot={{ r: 2 }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartContainer>

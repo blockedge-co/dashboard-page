@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Leaf, Menu, X, Bell, Settings, BarChart3, FolderOpen, TrendingUp } from "lucide-react"
+import { Leaf, Menu, X, Bell, Settings, BarChart3, FolderOpen, TrendingUp, Award } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +19,7 @@ interface DashboardLayoutProps {
 const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
   { name: "Projects", href: "/projects", icon: FolderOpen },
+  { name: "IREC Certificates", href: "/irec-certificates", icon: Award },
 ]
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
